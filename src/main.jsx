@@ -1,3 +1,4 @@
+import GeminiTest from "./GeminiTest";
 import ProtectedRoute from "./ProtectedRoute";
 import React from "react";
 import ReactDOM from "react-dom/client";
@@ -11,6 +12,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
       <Routes>
+        <Route path="/gemini" element={<GeminiTest />} />
         <Route path="/" element={<Login />} />
        <Route
   path="/dashboard"
