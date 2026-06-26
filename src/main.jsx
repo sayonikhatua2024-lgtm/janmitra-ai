@@ -1,3 +1,4 @@
+import ComplaintPriorityTest from "./ComplaintPriorityTest";
 import SchemeRecommendation from "./SchemeRecommendation";
 import ChatPage from "./ChatPage";
 import GeminiTest from "./GeminiTest";
@@ -14,6 +15,10 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
       <Routes>
+        <Route
+  path="/priority"
+  element={<ComplaintPriorityTest />}
+/>
         <Route
   path="/schemes"
   element={<SchemeRecommendation />}
