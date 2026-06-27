@@ -93,7 +93,7 @@ Provide:
 
       {result && (
         <div style={{
-          background: "#1e293b",
+          background:"#1e293b",
           padding: "20px",
           borderRadius: "10px"
         }}>

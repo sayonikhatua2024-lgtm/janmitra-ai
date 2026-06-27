@@ -26,56 +26,82 @@ function ChatPage() {
         maxWidth: "800px",
         margin: "50px auto",
         padding: "20px",
-        color: "white"
-      }}
-    >
+        color: "black",
+        background: "white",
+        borderRadius: "12px"
+  }}
+>
 
-      <h1>🤖 JanMitra AI Assistant</h1>
-
-      <textarea
+     <h1 style={{ color: "black" }}>
+  🤖 JanMitra AI Assistant
+</h1>
+            <textarea
         rows="5"
         placeholder="Ask your question..."
         value={question}
         onChange={(e) => setQuestion(e.target.value)}
         style={{
           width: "100%",
-          padding: "10px",
-          borderRadius: "10px"
+          padding: "15px",
+          borderRadius: "10px",
+          border: "2px solid #2563eb",
+          backgroundColor: "white",
+          color: "black",
+          fontSize: "16px",
+          marginTop: "20px",
+          marginBottom: "20px"
         }}
-      />
+/>
+  
 
       <br /><br />
 
       <button
         onClick={handleAsk}
         style={{
-          padding: "10px 20px",
+          padding: "12px 30px",
           borderRadius: "10px",
-          cursor: "pointer"
+          border: "none",
+          backgroundColor: "#2563eb",
+          color: "white",
+          fontSize: "16px",
+          cursor: "pointer",
+          marginTop: "20px"
         }}
-      >
-        Ask AI
-      </button>
+>
+  Ask AI
+</button>
 
       <br /><br />
 
       {loading && <p>Generating response...</p>}
 
       {answer && (
-        <div
-          style={{
-            background: "#1e293b",
-            padding: "20px",
-            borderRadius: "10px"
-          }}
-        >
-          <h3>Response:</h3>
-          <p>{answer}</p>
-        </div>
-      )}
+    <div
+  style={{
+    background: "#1e293b",
+    color: "white",
+    padding: "20px",
+    borderRadius: "10px",
+    marginTop: "20px"
+  }}
+>
+   <h3 style={{ color: "#38bdf8" }}>Response:</h3>
 
+    <div
+      style={{
+        whiteSpace: "pre-wrap",
+        lineHeight: "1.8",
+        fontSize: "16px"
+      }}
+    >
+      {answer}
     </div>
-  );
-}
-
+  </div>
+)}
+       
+        </div>
+      
+    );
+  }
 export default ChatPage;
