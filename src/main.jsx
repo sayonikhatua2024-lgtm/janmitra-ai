@@ -1,5 +1,5 @@
-import ComplaintSummaryTest
-from "./ComplaintSummaryTest";
+import ComplaintForm from "./ComplaintForm";
+import ComplaintSummaryTest from "./ComplaintSummaryTest";
 import ComplaintPriorityTest from "./ComplaintPriorityTest";
 import SchemeRecommendation from "./SchemeRecommendation";
 import ChatPage from "./ChatPage";
@@ -32,6 +32,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Route path="/chat" element={<ChatPage />} />
         <Route path="/gemini" element={<GeminiTest />} />
         <Route path="/" element={<Login />} />
+        <Route path="/complaint" element={<ComplaintForm />} />
        <Route
   path="/dashboard"
   element={
