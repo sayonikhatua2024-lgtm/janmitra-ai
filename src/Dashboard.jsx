@@ -1,3 +1,7 @@
+import { signOut } from "firebase/auth";
+import { auth } from "./firebase";
+import { useNavigate } from "react-router-dom";
+
 import {
   FilePlus2,
   ClipboardList,
@@ -5,19 +9,33 @@ import {
   Gift,
   Siren,
   LogOut,
+  Sparkles,
 } from "lucide-react";
-
-import { signOut } from "firebase/auth";
-import { auth } from "./firebase";
-import { useNavigate } from "react-router-dom";
 
 function Dashboard() {
   const navigate = useNavigate();
 
   const logout = async () => {
+  try {
     await signOut(auth);
+
+    alert("Logged Out Successfully");
+
     navigate("/");
-  };
+
+  } catch (error) {
+    alert(error.message);
+  }
+};
+const goComplaint = () => navigate("/complaint");
+
+const goStatus = () => navigate("/status");
+
+const goChat = () => navigate("/chat");
+
+const goSchemes = () => navigate("/schemes");
+
+const goEmergency = () => navigate("/emergency");
 
   const cards = [
     {
@@ -53,64 +71,198 @@ function Dashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-100">
+  <div className="relative min-h-screen overflow-hidden bg-slate-950">
 
-      <div className="bg-blue-700 text-white py-8 shadow-lg">
+    {/* Aurora Background */}
 
-        <h1 className="text-4xl font-bold text-center">
+    <div className="absolute inset-0">
+
+      <div className="absolute -top-40 -left-32 h-96 w-96 rounded-full bg-violet-600 opacity-30 blur-3xl animate-pulse"></div>
+
+      <div className="absolute bottom-0 right-0 h-[420px] w-[420px] rounded-full bg-cyan-500 opacity-30 blur-3xl animate-pulse"></div>
+
+      <div className="absolute top-1/2 left-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-fuchsia-500 opacity-20 blur-3xl"></div>
+
+    </div>
+
+    <div className="relative z-10 max-w-7xl mx-auto px-6 py-10">
+
+      {/* Header */}
+
+      <div className="text-center">
+
+        <h1 className="text-5xl font-black text-white">
           JanMitra AI
         </h1>
 
-        <p className="text-center mt-2 text-blue-100">
+        <p className="text-slate-300 mt-3 text-lg">
           Smart Citizen Complaint Portal
+        </p>
+
+        <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-cyan-500/10 px-5 py-2 border border-cyan-500/20">
+
+          <Sparkles className="text-cyan-400" size={18} />
+
+          <span className="text-cyan-300">
+            Welcome back 👋
+          </span>
+
+        </div>
+
+      </div>
+
+      {/* Dashboard Cards */}
+
+      <div className="grid md:grid-cols-3 gap-8 mt-14">
+
+        {/* Complaint */}
+
+        <button
+          onClick={goComplaint}
+          className="group rounded-3xl bg-gradient-to-br from-blue-600 to-cyan-500 p-8 shadow-xl hover:scale-105 hover:-translate-y-2 transition-all duration-300"
+        >
+
+          <FilePlus2
+            size={60}
+            className="text-cyan-400 group-hover:rotate-6 transition"
+          />
+
+          <h2 className="text-2xl font-bold text-white mt-6">
+            Register Complaint
+          </h2>
+
+          <p className="text-white/90 mt-3">
+            Submit civic complaints instantly.
+          </p>
+
+        </button>
+
+        {/* Status */}
+
+        <button
+          onClick={goStatus}
+          className="group rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-600 p-8 shadow-xl hover:scale-105 hover:-translate-y-2 transition-all duration-300"
+        >
+
+          <ClipboardList
+            size={60}
+            className="text-emerald-400 group-hover:rotate-6 transition"
+          />
+
+          <h2 className="text-2xl font-bold text-white mt-6">
+            Complaint Status
+          </h2>
+
+          <p className="text-white/90 mt-3">
+            Track your complaint progress.
+          </p>
+
+        </button>
+
+        {/* AI */}
+
+        <button
+          onClick={goChat}
+          className="group rounded-3xl bg-gradient-to-br from-violet-600 to-fuchsia-600 p-8 shadow-xl hover:scale-105 hover:-translate-y-2 transition-all duration-300"
+        >
+
+          <Bot
+            size={60}
+            className="text-violet-400 group-hover:rotate-6 transition"
+          />
+
+          <h2 className="text-2xl font-bold text-white mt-6">
+            AI Assistant
+          </h2>
+
+          <p className="text-white/90 mt-3">
+            Get instant AI-powered guidance.
+          </p>
+
+        </button>
+
+        {/* Schemes */}
+
+        <button
+          onClick={goSchemes}
+          className="group rounded-3xl bg-gradient-to-br from-orange-500 to-amber-500 p-8 shadow-xl hover:scale-105 hover:-translate-y-2 transition-all duration-300"
+        >
+
+          <Gift
+            size={60}
+            className="text-pink-400 group-hover:rotate-6 transition"
+          />
+
+          <h2 className="text-2xl font-bold text-white mt-6">
+            Government Schemes
+          </h2>
+
+          <p className="text-white/90 mt-3">
+            Discover schemes suited for you.
+          </p>
+
+        </button>
+
+        {/* Emergency */}
+
+        <button
+          onClick={goEmergency}
+          className="group rounded-3xl bg-gradient-to-br from-red-500 to-rose-600 p-8 shadow-xl hover:scale-105 hover:-translate-y-2 transition-all duration-300"
+        >
+
+          <Siren
+            size={60}
+            className="text-red-400 group-hover:rotate-6 transition"
+          />
+
+          <h2 className="text-2xl font-bold text-white mt-6">
+            Emergency Help
+          </h2>
+
+          <p className="text-white/90 mt-3">
+            Quick access to emergency support.
+          </p>
+
+        </button>
+
+        {/* Logout */}
+
+        <button
+          onClick={logout}
+          className="group rounded-3xl bg-gradient-to-br from-slate-700 to-slate-900 p-8 shadow-xl hover:scale-105 hover:-translate-y-2 transition-all duration-300"
+        > 
+        
+          <LogOut
+            size={60}
+            className="text-white group-hover:translate-x-1 transition"
+          />
+
+          <h2 className="text-2xl font-bold text-white mt-6">
+            Logout
+          </h2>
+
+          <p className="text-white/90 mt-3">
+            Securely sign out of your account.
+          </p>
+
+        </button>
+
+      </div>
+
+      {/* Footer */}
+
+      <div className="text-center mt-16">
+
+        <p className="text-slate-400">
+          Building smarter cities with AI 🚀
         </p>
 
       </div>
 
-      <div className="max-w-6xl mx-auto p-8">
-
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-
-          {cards.map((card, index) => (
-            <div
-              key={index}
-              onClick={() => navigate(card.route)}
-              className={`${card.color}
-              text-white
-              rounded-2xl
-              shadow-xl
-              p-8
-              cursor-pointer
-              hover:scale-105
-              transition
-              duration-300`}
-            >
-              {card.icon}
-
-              <h2 className="text-2xl font-bold mt-5">
-                {card.title}
-              </h2>
-            </div>
-          ))}
-
-        </div>
-
-        <div className="text-center mt-12">
-
-          <button
-            onClick={logout}
-            className="bg-gray-900 text-white px-8 py-3 rounded-xl hover:bg-black flex items-center gap-2 mx-auto"
-          >
-            <LogOut size={20} />
-            Logout
-          </button>
-
-        </div>
-
-      </div>
-
     </div>
-  );
+
+  </div>
+);
 }
 
 export default Dashboard;
