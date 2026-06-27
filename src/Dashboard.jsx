@@ -1,95 +1,110 @@
+import {
+  FilePlus2,
+  ClipboardList,
+  Bot,
+  Gift,
+  Siren,
+  LogOut,
+} from "lucide-react";
+
 import { signOut } from "firebase/auth";
 import { auth } from "./firebase";
 import { useNavigate } from "react-router-dom";
-import {
-  FilePlus,
-  Bot,
-  Gift,
-  ClipboardList,
-  LogOut,
-} from "lucide-react";
 
 function Dashboard() {
   const navigate = useNavigate();
 
   const logout = async () => {
-    try {
-      await signOut(auth);
-      alert("Logged out successfully");
-      navigate("/");
-    } catch (error) {
-      alert(error.message);
-    }
+    await signOut(auth);
+    navigate("/");
   };
 
+  const cards = [
+    {
+      title: "Register Complaint",
+      icon: <FilePlus2 size={40} />,
+      color: "bg-blue-600",
+      route: "/complaint",
+    },
+    {
+      title: "Complaint Status",
+      icon: <ClipboardList size={40} />,
+      color: "bg-green-600",
+      route: "/status",
+    },
+    {
+      title: "AI Assistant",
+      icon: <Bot size={40} />,
+      color: "bg-purple-600",
+      route: "/chat",
+    },
+    {
+      title: "Government Schemes",
+      icon: <Gift size={40} />,
+      color: "bg-orange-500",
+      route: "/schemes",
+    },
+    {
+      title: "Emergency Help",
+      icon: <Siren size={40} />,
+      color: "bg-red-600",
+      route: "/emergency",
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-slate-100 p-8">
+    <div className="min-h-screen bg-slate-100">
 
-      <div className="max-w-6xl mx-auto">
+      <div className="bg-blue-700 text-white py-8 shadow-lg">
 
-        <h1 className="text-5xl font-bold text-center text-blue-700">
+        <h1 className="text-4xl font-bold text-center">
           JanMitra AI
         </h1>
 
-        <p className="text-center text-gray-600 mt-3 text-lg">
+        <p className="text-center mt-2 text-blue-100">
           Smart Citizen Complaint Portal
         </p>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mt-12">
+      </div>
 
-          <div
-            onClick={() => navigate("/complaint")}
-            className="bg-white rounded-xl shadow-lg p-6 cursor-pointer hover:shadow-2xl hover:scale-105 transition"
-          >
-            <FilePlus size={45} className="text-blue-600 mb-4" />
-            <h2 className="font-bold text-xl">Register Complaint</h2>
-            <p className="text-gray-500 mt-2">
-              Submit a new complaint.
-            </p>
-          </div>
+      <div className="max-w-6xl mx-auto p-8">
 
-          <div
-            onClick={() => navigate("/chat")}
-            className="bg-white rounded-xl shadow-lg p-6 cursor-pointer hover:shadow-2xl hover:scale-105 transition"
-          >
-            <Bot size={45} className="text-green-600 mb-4" />
-            <h2 className="font-bold text-xl">AI Assistant</h2>
-            <p className="text-gray-500 mt-2">
-              Ask AI for guidance.
-            </p>
-          </div>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
 
-          <div
-            onClick={() => navigate("/schemes")}
-            className="bg-white rounded-xl shadow-lg p-6 cursor-pointer hover:shadow-2xl hover:scale-105 transition"
-          >
-            <Gift size={45} className="text-purple-600 mb-4" />
-            <h2 className="font-bold text-xl">Scheme Finder</h2>
-            <p className="text-gray-500 mt-2">
-              Find government schemes.
-            </p>
-          </div>
+          {cards.map((card, index) => (
+            <div
+              key={index}
+              onClick={() => navigate(card.route)}
+              className={`${card.color}
+              text-white
+              rounded-2xl
+              shadow-xl
+              p-8
+              cursor-pointer
+              hover:scale-105
+              transition
+              duration-300`}
+            >
+              {card.icon}
 
-          <div
-            className="bg-white rounded-xl shadow-lg p-6 cursor-pointer hover:shadow-2xl hover:scale-105 transition"
-          >
-            <ClipboardList size={45} className="text-orange-500 mb-4" />
-            <h2 className="font-bold text-xl">Complaint Status</h2>
-            <p className="text-gray-500 mt-2">
-              Track complaint progress.
-            </p>
-          </div>
+              <h2 className="text-2xl font-bold mt-5">
+                {card.title}
+              </h2>
+            </div>
+          ))}
 
         </div>
 
-        <div className="flex justify-center mt-12">
+        <div className="text-center mt-12">
+
           <button
             onClick={logout}
-            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl"
+            className="bg-gray-900 text-white px-8 py-3 rounded-xl hover:bg-black flex items-center gap-2 mx-auto"
           >
             <LogOut size={20} />
             Logout
           </button>
+
         </div>
 
       </div>
