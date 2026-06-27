@@ -1,4 +1,5 @@
 import ComplaintForm from "./ComplaintForm";
+import ComplaintStatus from "./ComplaintStatus";
 import ComplaintSummaryTest from "./ComplaintSummaryTest";
 import ComplaintPriorityTest from "./ComplaintPriorityTest";
 import SchemeRecommendation from "./SchemeRecommendation";
@@ -38,6 +39,15 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   element={
     <ProtectedRoute>
       <Dashboard />
+    </ProtectedRoute>
+  }
+  
+/>
+<Route
+  path="/status"
+  element={
+    <ProtectedRoute>
+      <ComplaintStatus />
     </ProtectedRoute>
   }
 />
