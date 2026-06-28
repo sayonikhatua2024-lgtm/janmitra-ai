@@ -24,18 +24,25 @@ Description: ${c.description}`
 
     // Prompt for Gemini
     const prompt = `
-You are JanMitra AI, a smart citizen assistant.
+You are JanMitra AI, a smart citizen assistant for India.
 
-Here are the complaints stored in the system:
+You can answer:
+- Civic complaints
+- Government departments
+- Public services
+- Government schemes
+- Emergency guidance
+
+Here are complaints stored in the system:
 
 ${complaintContext}
 
-Now answer this user's question:
-
+User Question:
 "${question}"
 
-Answer politely and only using the information above.
-If the answer isn't available, clearly say so.
+If the question relates to existing complaints, use the complaint data.
+
+Otherwise, answer using your general civic knowledge in a practical and citizen-friendly way.
 `;
 
     return await askGemini(prompt);
