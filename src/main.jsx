@@ -66,13 +66,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
 
         {/* Admin Dashboard */}
         <Route
-          path="/admin"
-          element={
-            <ProtectedRoute>
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
+  path="/admin"
+  element={<AdminDashboard />}
+/>
 
         {/* AI Complaint Summary */}
         <Route

@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { saveComplaint } from "./services/firestoreService";
-
+import { checkDuplicateComplaint } from "./services/duplicateComplaintService";
+import { getDepartmentSuggestion } from "./services/departmentAI";
 import {
   User,
   ClipboardList,
@@ -36,6 +37,9 @@ function ComplaintForm() {
   const [loading, setLoading] = useState(false);
 
   const [image, setImage] = useState(null);
+  const [departmentInfo, setDepartmentInfo] = useState("");
+const [priority, setPriority] = useState("");
+const [analyzing, setAnalyzing] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
@@ -82,9 +86,60 @@ const handleImage = (e) => {
   }
 
 };
+const analyzeComplaint = async () => {
+
+  if (!formData.description) {
+    alert("Please enter complaint description first.");
+    return;
+  }
+
+  try {
+    setAnalyzing(true);
+
+    const result = await getDepartmentSuggestion(
+      formData.description
+    );
+
+    setDepartmentInfo(result);
+    if (result.includes("Water")) {
+  setFormData((prev) => ({
+    ...prev,
+    category: "Water",
+  }));
+}
+
+if (result.includes("Road")) {
+  setFormData((prev) => ({
+    ...prev,
+    category: "Roads",
+  }));
+}
+
+if (result.includes("Electric")) {
+  setFormData((prev) => ({
+    ...prev,
+    category: "Electricity",
+  }));
+}
+
+if (result.includes("Garbage")) {
+  setFormData((prev) => ({
+    ...prev,
+    category: "Garbage",
+  }));
+}
+
+  } catch (error) {
+    console.log(error);
+    alert("Unable to analyze complaint.");
+  } finally {
+    setAnalyzing(false);
+  }
+};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log("Submit button clicked");
 
     if (
       !formData.name ||
@@ -99,13 +154,31 @@ const handleImage = (e) => {
 
     try {
       setLoading(true);
+const complaintId =
+  "JM-" + Date.now().toString().slice(-6);
+console.log("Checking duplicates...");
+const duplicateResult =
+  await checkDuplicateComplaint(
+    formData.title,
+    formData.description
+  );
+  console.log(duplicateResult);
 
+if (duplicateResult.duplicate) {
+  alert(
+    `⚠ Similar complaint already exists:\n\n"${duplicateResult.existingComplaint.title}"\n\nYour complaint will still be registered.`
+  );
+}
       await saveComplaint({
-        ...formData,
-        status: "Pending",
-      });
+  ...formData,
+  aiAnalysis: departmentInfo,
+  imageName: image ? image.name : "",
+  status: "Pending",
+});
 
-      alert("Complaint Submitted Successfully ✅");
+      alert(
+ `Complaint Submitted Successfully ✅\nID: ${complaintId}`
+);
 
       setFormData({
         name: "",
@@ -222,7 +295,43 @@ const handleImage = (e) => {
             />
 
           </div>
+<button
+  type="button"
+  onClick={analyzeComplaint}
+  className="w-full rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-600 py-4 text-white font-bold"
+>
+  {analyzing
+    ? "Analyzing Complaint..."
+    : "🤖 Analyze with AI"}
+</button>
+{departmentInfo && (
+  <div className="bg-slate-900 border border-cyan-500 rounded-2xl p-5 text-white">
 
+    <h3 className="text-cyan-400 font-bold mb-3">
+      AI Analysis
+    </h3>
+
+   <div className="whitespace-pre-wrap leading-8 font-medium">
+  {departmentInfo}
+</div>
+
+<div className="mt-5 border-t border-slate-700 pt-4">
+
+  <h4 className="text-cyan-300 font-semibold mb-3">
+    Recommended Citizen Actions
+  </h4>
+
+  <ul className="space-y-2 text-slate-300">
+    <li>✔ Register complaint immediately.</li>
+    <li>✔ Upload photo evidence.</li>
+    <li>✔ Save complaint ID for tracking.</li>
+    <li>✔ Contact department if unresolved.</li>
+  </ul>
+
+</div>
+
+  </div>
+)}
          {/* Category */}
 
 <div>
