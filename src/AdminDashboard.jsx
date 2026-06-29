@@ -1,3 +1,9 @@
+import { generateSentimentAnalysis }
+from "./services/sentimentAI";
+import { generateBudgetAllocation }
+from "./services/budgetAllocationAI";
+import { generateFutureRiskPrediction }
+from "./services/futureRiskAI";
 import { generateMPActionPlan } from "./services/mpActionPlanAI";
 import { toast } from "react-toastify";
 import ComplaintMap from "./ComplaintMap";
@@ -22,7 +28,32 @@ import {
 
 function AdminDashboard() {
   const [complaints, setComplaints] = useState([]);
+  const [healthScore, setHealthScore] = useState({
+  overall: 100,
+  roads: 100,
+  water: 100,
+  sanitation: 100,
+  status: "Excellent"
+});
   const [mpPlan, setMpPlan] = useState("");
+  const [futureRisk, setFutureRisk] = useState("");
+  const [budgetPlan, setBudgetPlan] = useState("");
+const [loadingBudget, setLoadingBudget] = useState(false);
+const [sentiment, setSentiment] = useState("");
+const [loadingSentiment, setLoadingSentiment] = useState(false);
+  const [sdgData, setSdgData] = useState({
+  sdg3: 0,
+  sdg6: 0,
+  sdg9: 0,
+  sdg11: 0
+});
+const [trendData, setTrendData] = useState({
+  roads: 0,
+  water: 0,
+  garbage: 0,
+  topIssue: "None"
+});
+const [loadingRisk, setLoadingRisk] = useState(false);
 const [loadingPlan, setLoadingPlan] = useState(false);
   const [summary, setSummary] = useState("");
   const [loadingSummary, setLoadingSummary] = useState(false);
@@ -39,6 +70,7 @@ const [loadingPlan, setLoadingPlan] = useState(false);
     );
 
     setComplaints(updatedComplaints);
+    calculateHealthScore();
   } else {
     alert("Failed to update complaint status");
   }
@@ -91,6 +123,11 @@ useEffect(() => {
       }
     );
   }
+}, [complaints]);
+useEffect(() => {
+  calculateHealthScore();
+   calculateSDGImpact();
+   calculateTrendAnalysis();
 }, [complaints]);
   // Statistics
   const totalComplaints = complaints.length;
@@ -174,6 +211,66 @@ const handleGenerateMPPlan = async () => {
     setLoadingPlan(false);
   }
 };
+const handleGenerateFutureRisk = async () => {
+  try {
+    setLoadingRisk(true);
+
+    const prediction =
+      await generateFutureRiskPrediction(
+        complaints
+      );
+
+    setFutureRisk(prediction);
+  } catch (error) {
+    console.log(error);
+
+    setFutureRisk(
+      "⚠️ Unable to generate future risk prediction."
+    );
+  } finally {
+    setLoadingRisk(false);
+  }
+};
+const handleGenerateBudget = async () => {
+  try {
+    setLoadingBudget(true);
+
+    const plan =
+      await generateBudgetAllocation(
+        complaints
+      );
+
+    setBudgetPlan(plan);
+  } catch (error) {
+    console.log(error);
+
+    setBudgetPlan(
+      "Unable to generate budget allocation."
+    );
+  } finally {
+    setLoadingBudget(false);
+  }
+};
+const handleGenerateSentiment = async () => {
+  try {
+    setLoadingSentiment(true);
+
+    const result =
+      await generateSentimentAnalysis(
+        complaints
+      );
+
+    setSentiment(result);
+  } catch (error) {
+    console.log(error);
+
+    setSentiment(
+      "Unable to analyze sentiment."
+    );
+  } finally {
+    setLoadingSentiment(false);
+  }
+};
 // AI Summary
   const handleGenerateSummary = async () => {
     
@@ -207,8 +304,116 @@ const handleGenerateMPPlan = async () => {
     borderRadius: "12px",
     textAlign: "center",
   };
+const calculateHealthScore = () => {
 
-  return (
+  let roads = 100;
+  let water = 100;
+  let sanitation = 100;
+
+  const roadComplaints =
+    complaints.filter(c => c.category === "Roads").length;
+
+  const waterComplaints =
+    complaints.filter(c => c.category === "Water").length;
+
+  const garbageComplaints =
+    complaints.filter(c => c.category === "Garbage").length;
+
+  roads = Math.max(0, 100 - roadComplaints * 10);
+  water = Math.max(0, 100 - waterComplaints * 10);
+  sanitation = Math.max(0, 100 - garbageComplaints * 10);
+
+  const overall =
+    Math.round((roads + water + sanitation) / 3);
+
+  let status = "Excellent";
+
+  if (overall < 80) status = "Needs Attention";
+  if (overall < 60) status = "Critical";
+
+  setHealthScore({
+    overall,
+    roads,
+    water,
+    sanitation,
+    status
+  });
+};
+const calculateSDGImpact = () => {
+
+  let sdg3 = 0;   // Health
+  let sdg6 = 0;   // Water
+  let sdg9 = 0;   // Infrastructure
+  let sdg11 = 0;  // Sustainable Cities
+
+  complaints.forEach((complaint) => {
+
+    switch (complaint.category) {
+
+      case "Health":
+        sdg3++;
+        break;
+
+      case "Water":
+        sdg6++;
+        break;
+
+      case "Roads":
+        sdg9++;
+        break;
+
+      case "Garbage":
+      case "Others":
+        sdg11++;
+        break;
+
+      default:
+        break;
+    }
+  });
+
+  setSdgData({
+    sdg3,
+    sdg6,
+    sdg9,
+    sdg11
+  });
+};  
+const calculateTrendAnalysis = () => {
+
+  const roads = complaints.filter(
+    c => c.category === "Roads"
+  ).length;
+
+  const water = complaints.filter(
+    c => c.category === "Water"
+  ).length;
+
+  const garbage = complaints.filter(
+    c => c.category === "Garbage"
+  ).length;
+
+  let topIssue = "Roads";
+  let max = roads;
+
+  if (water > max) {
+    max = water;
+    topIssue = "Water";
+  }
+
+  if (garbage > max) {
+    max = garbage;
+    topIssue = "Garbage";
+  }
+
+  setTrendData({
+    roads,
+    water,
+    garbage,
+    topIssue
+  });
+};
+return (
     <div
       style={{
         padding: "30px",
@@ -291,6 +496,183 @@ const handleGenerateMPPlan = async () => {
           ))}
         </div>
       )}
+      {/* Constituency Health Score */}
+<div
+  style={{
+    background: "#1a1f38",
+    borderRadius: "15px",
+    padding: "25px",
+    marginBottom: "30px",
+    textAlign: "center",
+    border: "2px solid #22c55e",
+  }}
+>
+  <h2
+    style={{
+      color: "#22c55e",
+      marginBottom: "15px",
+    }}
+  >
+    🏥 AI Constituency Health Score
+  </h2>
+
+  <h1
+    style={{
+      fontSize: "55px",
+      color: "#38bdf8",
+      marginBottom: "10px",
+    }}
+  >
+    {healthScore.overall}/100
+  </h1>
+
+  <h3
+    style={{
+      color:
+        healthScore.status === "Critical"
+          ? "#ef4444"
+          : healthScore.status === "Needs Attention"
+          ? "#f59e0b"
+          : "#10b981",
+    }}
+  >
+    {healthScore.status}
+  </h3>
+
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "space-around",
+      marginTop: "20px",
+      flexWrap: "wrap",
+      gap: "20px",
+    }}
+  >
+    <div>
+      <h4>🛣 Roads</h4>
+      <p>{healthScore.roads}/100</p>
+    </div>
+
+    <div>
+      <h4>💧 Water</h4>
+      <p>{healthScore.water}/100</p>
+    </div>
+
+    <div>
+      <h4>🗑 Sanitation</h4>
+      <p>{healthScore.sanitation}/100</p>
+    </div>
+  </div>
+</div>
+<div
+  style={{
+    background: "#1a1f38",
+    borderRadius: "15px",
+    padding: "20px",
+    marginBottom: "30px"
+  }}
+>
+
+  <h2
+    style={{
+      color: "#10b981",
+      textAlign: "center"
+    }}
+  >
+    🌍 JanMitra SDG Impact
+  </h2>
+
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns:
+        "repeat(auto-fit, minmax(250px,1fr))",
+      gap: "20px",
+      marginTop: "20px"
+    }}
+  >
+
+    <div>
+      <h3>SDG 3 🏥</h3>
+      <p>Good Health</p>
+      <h2>{sdgData.sdg3}</h2>
+    </div>
+
+    <div>
+      <h3>SDG 6 💧</h3>
+      <p>Clean Water</p>
+      <h2>{sdgData.sdg6}</h2>
+    </div>
+
+    <div>
+      <h3>SDG 9 🛣</h3>
+      <p>Infrastructure</p>
+      <h2>{sdgData.sdg9}</h2>
+    </div>
+
+    <div>
+      <h3>SDG 11 🏙</h3>
+      <p>Sustainable Cities</p>
+      <h2>{sdgData.sdg11}</h2>
+    </div>
+
+  </div>
+
+</div>
+<div
+  style={{
+    background: "#1a1f38",
+    borderRadius: "15px",
+    padding: "20px",
+    marginBottom: "30px",
+  }}
+>
+  <h2
+    style={{
+      color: "#38bdf8",
+      textAlign: "center",
+    }}
+  >
+    📈 Civic Trend Analysis
+  </h2>
+
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "space-around",
+      flexWrap: "wrap",
+      marginTop: "20px",
+      gap: "20px",
+    }}
+  >
+    <div>
+      <h3>🛣 Roads</h3>
+      <h2>{trendData.roads}</h2>
+    </div>
+
+    <div>
+      <h3>💧 Water</h3>
+      <h2>{trendData.water}</h2>
+    </div>
+
+    <div>
+      <h3>🗑 Garbage</h3>
+      <h2>{trendData.garbage}</h2>
+    </div>
+  </div>
+
+  <hr style={{ margin: "20px 0" }} />
+
+  <h3 style={{ color: "#f59e0b" }}>
+    🔥 Most Reported Issue:
+    {" "}{trendData.topIssue}
+  </h3>
+
+  <h3 style={{ color: "#10b981" }}>
+    ⚡ Constituency Focus Area:
+    {trendData.topIssue} infrastructure requires immediate intervention.
+  </h3>
+</div>
       {/* Stats */}
       <div
         style={{
@@ -459,6 +841,57 @@ const handleGenerateMPPlan = async () => {
     ? "Generating MP Plan..."
     : "🏛 Generate Constituency Development Plan"}
 </button>
+<button
+  onClick={handleGenerateFutureRisk}
+  style={{
+    padding: "12px 25px",
+    borderRadius: "10px",
+    border: "none",
+    background: "#f59e0b",
+    color: "white",
+    fontSize: "16px",
+    cursor: "pointer",
+    marginLeft: "15px",
+  }}
+>
+  {loadingRisk
+    ? "Predicting Risks..."
+    : "🔮 Predict Future Risks"}
+</button>
+<button
+  onClick={handleGenerateBudget}
+  style={{
+    padding: "12px 25px",
+    borderRadius: "10px",
+    border: "none",
+    background: "#10b981",
+    color: "white",
+    fontSize: "16px",
+    cursor: "pointer",
+    marginLeft: "15px",
+  }}
+>
+  {loadingBudget
+    ? "Generating Budget..."
+    : "💰 Generate Budget Allocation"}
+</button>
+<button
+  onClick={handleGenerateSentiment}
+  style={{
+    padding: "12px 25px",
+    borderRadius: "10px",
+    border: "none",
+    background: "#facc15",
+    color: "black",
+    fontSize: "16px",
+    cursor: "pointer",
+    marginLeft: "15px",
+  }}
+>
+  {loadingSentiment
+    ? "Analyzing..."
+    : "😊 Analyze Citizen Sentiment"}
+</button>
       </div>
 
       {summary && (
@@ -494,6 +927,59 @@ const handleGenerateMPPlan = async () => {
     </h2>
 
     <p>{mpPlan}</p>
+  </div>
+)}
+{futureRisk && (
+  <div
+    style={{
+      background: "#1a1f38",
+      borderRadius: "12px",
+      padding: "20px",
+      marginBottom: "30px",
+      whiteSpace: "pre-wrap",
+    }}
+  >
+    <h2 style={{ color: "#f59e0b" }}>
+      🔮 Future Risk Prediction
+    </h2>
+
+    <p>{futureRisk}</p>
+  </div>
+)}
+{budgetPlan && (
+  <div
+    style={{
+      background: "#1a1f38",
+      borderRadius: "12px",
+      padding: "20px",
+      marginBottom: "30px",
+      whiteSpace: "pre-wrap",
+      border: "2px solid #10b981",
+    }}
+  >
+    <h2 style={{ color: "#10b981" }}>
+      💰 AI Budget Allocation Simulator
+    </h2>
+
+    <p>{budgetPlan}</p>
+  </div>
+)}
+{sentiment && (
+  <div
+    style={{
+      background: "#1a1f38",
+      borderRadius: "12px",
+      padding: "20px",
+      marginBottom: "30px",
+      whiteSpace: "pre-wrap",
+      border: "2px solid #facc15",
+    }}
+  >
+    <h2 style={{ color: "#facc15" }}>
+      😊 AI Citizen Sentiment Index
+    </h2>
+
+    <p>{sentiment}</p>
   </div>
 )}
       {/* Complaint List */}
