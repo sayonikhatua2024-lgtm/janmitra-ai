@@ -77,7 +77,7 @@ function ComplaintStatus() {
   return (
     <div className="relative min-h-screen overflow-hidden bg-slate-950">
 
-<div className="absolute inset-0">
+<div className="absolute inset-0 pointer-events-none">
 
   <div className="absolute -top-40 -left-32 h-96 w-96 rounded-full bg-violet-600 opacity-30 blur-3xl"></div>
 
@@ -88,6 +88,8 @@ function ComplaintStatus() {
 </div>
 
 <div className="relative z-10">
+
+  
   
 </div>
       {/* Header */}
