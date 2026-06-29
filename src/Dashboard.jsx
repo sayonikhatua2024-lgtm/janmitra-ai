@@ -77,11 +77,11 @@ const goEmergency = () => navigate("/emergency");
 
     <div className="absolute inset-0">
 
-      <div className="absolute -top-40 -left-32 h-96 w-96 rounded-full bg-violet-600 opacity-30 blur-3xl animate-pulse"></div>
+      <div className="absolute -top-40 -left-32 h-96 w-96 rounded-full bg-orange-500 opacity-30 blur-3xl animate-pulse"></div>
 
-      <div className="absolute bottom-0 right-0 h-[420px] w-[420px] rounded-full bg-cyan-500 opacity-30 blur-3xl animate-pulse"></div>
+      <div className="absolute bottom-0 right-0 h-[420px] w-[420px] rounded-full bg-emerald-500 opacity-30 blur-3xl animate-pulse"></div>
 
-      <div className="absolute top-1/2 left-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-fuchsia-500 opacity-20 blur-3xl"></div>
+      <div className="absolute top-1/2 left-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white opacity-15 blur-3xl"></div>
 
     </div>
 
@@ -91,19 +91,23 @@ const goEmergency = () => navigate("/emergency");
 
       <div className="text-center">
 
-        <h1 className="text-5xl font-black text-white">
+        <h1 className="text-5xl font-black bg-gradient-to-r from-orange-400 via-white to-emerald-400 bg-clip-text text-transparent">
           JanMitra AI
         </h1>
 
         <p className="text-slate-300 mt-3 text-lg">
           Smart Citizen Complaint Portal
         </p>
+        <p className="text-orange-300 mt-2">
+  🇮🇳 Digital India • AI Powered Governance
+  <Sparkles size={18} className="text-orange-400" />
+</p>
 
-        <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-cyan-500/10 px-5 py-2 border border-cyan-500/20">
+        <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-orange-500/10 px-5 py-2 border border-orange-500/20">
 
-          <Sparkles className="text-cyan-400" size={18} />
+          <Sparkles className="text-orange-400" size={18} />
 
-          <span className="text-cyan-300">
+          <span className="text-orange-300">
             Welcome back 👋
           </span>
 
@@ -119,12 +123,16 @@ const goEmergency = () => navigate("/emergency");
 
         <button
           onClick={goComplaint}
-          className="group rounded-3xl bg-gradient-to-br from-blue-600 to-cyan-500 p-8 shadow-xl hover:scale-105 hover:-translate-y-2 transition-all duration-300"
+          className="group rounded-3xl bg-gradient-to-br from-orange-500 to-orange-700 p-8 shadow-xl hover:scale-105
+hover:-translate-y-2
+hover:shadow-2xl
+hover:ring-2
+hover:ring-white/20 transition-all duration-300"
         >
 
           <FilePlus2
             size={60}
-            className="text-cyan-400 group-hover:rotate-6 transition"
+            className="text-orange-400 group-hover:rotate-6 transition"
           />
 
           <h2 className="text-2xl font-bold text-white mt-6">
@@ -141,7 +149,11 @@ const goEmergency = () => navigate("/emergency");
 
         <button
           onClick={goStatus}
-          className="group rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-600 p-8 shadow-xl hover:scale-105 hover:-translate-y-2 transition-all duration-300"
+          className="group rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-600 p-8 shadow-xl hover:scale-105 hovhover:scale-105
+hover:-translate-y-2
+hover:shadow-2xl
+hover:ring-2
+hover:ring-white/20er:-translate-y-2 transition-all duration-300"
         >
 
           <ClipboardList
@@ -163,12 +175,16 @@ const goEmergency = () => navigate("/emergency");
 
         <button
           onClick={goChat}
-          className="group rounded-3xl bg-gradient-to-br from-violet-600 to-fuchsia-600 p-8 shadow-xl hover:scale-105 hover:-translate-y-2 transition-all duration-300"
+          className="group rounded-3xl bg-gradient-to-br from-orange-500 via-amber-500 to-emerald-600 p-8 shadow-xl hover:scale-105 hohover:scale-105
+hover:-translate-y-2
+hover:shadow-2xl
+hover:ring-2
+hover:ring-white/20ver:-translate-y-2 transition-all duration-300"
         >
 
           <Bot
             size={60}
-            className="text-violet-400 group-hover:rotate-6 transition"
+            className="text-white group-hover:rotate-6 transition"
           />
 
           <h2 className="text-2xl font-bold text-white mt-6">
@@ -177,6 +193,7 @@ const goEmergency = () => navigate("/emergency");
 
           <p className="text-white/90 mt-3">
             Get instant AI-powered guidance.
+            
           </p>
 
         </button>
@@ -185,12 +202,16 @@ const goEmergency = () => navigate("/emergency");
 
         <button
           onClick={goSchemes}
-          className="group rounded-3xl bg-gradient-to-br from-orange-500 to-amber-500 p-8 shadow-xl hover:scale-105 hover:-translate-y-2 transition-all duration-300"
+          className="group rounded-3xl bg-gradient-to-br from-orange-500 via-amber-500 to-emerald-600 p-8 shadow-xl hover:scale-105 hover:-transhover:scale-105
+hover:-translate-y-2
+hover:shadow-2xl
+hover:ring-2
+hover:ring-white/20late-y-2 transition-all duration-300"
         >
 
           <Gift
             size={60}
-            className="text-pink-400 group-hover:rotate-6 transition"
+            className="text-white group-hover:rotate-6 transition"
           />
 
           <h2 className="text-2xl font-bold text-white mt-6">
@@ -207,7 +228,11 @@ const goEmergency = () => navigate("/emergency");
 
         <button
           onClick={goEmergency}
-          className="group rounded-3xl bg-gradient-to-br from-red-500 to-rose-600 p-8 shadow-xl hover:scale-105 hover:-translate-y-2 transition-all duration-300"
+          className="group rounded-3xl bg-gradient-to-br from-red-500 to-rose-600 p-8 shadow-xl hover:scale-105 hohover:scale-105
+hover:-translate-y-2
+hover:shadow-2xl
+hover:ring-2
+hover:ring-white/20ver:-translate-y-2 transition-all duration-300"
         >
 
           <Siren
@@ -229,7 +254,11 @@ const goEmergency = () => navigate("/emergency");
 
         <button
           onClick={logout}
-          className="group rounded-3xl bg-gradient-to-br from-slate-700 to-slate-900 p-8 shadow-xl hover:scale-105 hover:-translate-y-2 transition-all duration-300"
+          className="group rounded-3xl bg-gradient-to-br from-orange-900 to-red-900 p-8 shadow-xl hover:scale-105 hover:-trahover:scale-105
+hover:-translate-y-2
+hover:shadow-2xl
+hover:ring-2
+hover:ring-white/20nslate-y-2 transition-all duration-300"
         > 
         
           <LogOut
@@ -254,7 +283,7 @@ const goEmergency = () => navigate("/emergency");
       <div className="text-center mt-16">
 
         <p className="text-slate-400">
-          Building smarter cities with AI 🚀
+          Empowering Citizens • Strengthening India 
         </p>
 
       </div>

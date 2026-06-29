@@ -5,6 +5,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import "./index.css";
 
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 // Authentication & Dashboard
 import Login from "./Login";
 import Dashboard from "./Dashboard";
