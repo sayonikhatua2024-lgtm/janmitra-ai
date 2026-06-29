@@ -1,25 +1,94 @@
+import { toast } from "react-toastify";
+import ComplaintMap from "./ComplaintMap";
 import React, { useEffect, useMemo, useState } from "react";
-import { getAllComplaints } from "./services/firestoreService";
+import {
+  getAllComplaints,
+  updateComplaintStatus
+} from "./services/firestoreService";
 import { generateAdminSummary } from "./services/adminSummaryAI";
+
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
 
 function AdminDashboard() {
   const [complaints, setComplaints] = useState([]);
   const [summary, setSummary] = useState("");
   const [loadingSummary, setLoadingSummary] = useState(false);
+  const handleStatusUpdate = async (id, status) => {
+  const success = await updateComplaintStatus(id, status);
+
+  if (success) {
+    alert(`Complaint marked as ${status}`);
+
+    const updatedComplaints = complaints.map((complaint) =>
+      complaint.id === id
+        ? { ...complaint, status }
+        : complaint
+    );
+
+    setComplaints(updatedComplaints);
+  } else {
+    alert("Failed to update complaint status");
+  }
+};
 
   // Load complaints
   useEffect(() => {
-    const loadComplaints = async () => {
-      const data = await getAllComplaints();
+  const loadComplaints = async () => {
+    const data = await getAllComplaints();
 
-      console.log("Complaints fetched:", data);
+    console.log("Complaints fetched:", data);
 
-      setComplaints(data);
-    };
+    // Sort newest first
+    data.sort((a, b) => {
+      if (!a.createdAt || !b.createdAt) return 0;
 
-    loadComplaints();
-  }, []);
+      return (
+        b.createdAt.seconds - a.createdAt.seconds
+      );
+    });
 
+    setComplaints(data);
+  };
+
+  loadComplaints();
+
+  // Auto refresh every 5 seconds
+  const interval = setInterval(
+    loadComplaints,
+    5000
+  );
+
+  return () => clearInterval(interval);
+}, []);
+useEffect(() => {
+  if (complaints.length === 0) return;
+
+  const criticalComplaints = complaints.filter(
+    (complaint) =>
+      complaint.status === "Critical" ||
+      complaint.priority === "CRITICAL"
+  );
+
+  if (criticalComplaints.length > 0) {
+    toast.error(
+      `🚨 ${criticalComplaints.length} Critical Complaint(s) detected!`,
+      {
+        position: "top-right",
+        autoClose: 5000,
+      }
+    );
+  }
+}, [complaints]);
   // Statistics
   const totalComplaints = complaints.length;
 
@@ -60,8 +129,31 @@ function AdminDashboard() {
     message: `Multiple complaints detected in ${location}. Immediate attention recommended.`,
     count,
   }));
+const categoryData = Object.entries(
+  complaints.reduce((acc, complaint) => {
+    const category = complaint.category || "Others";
+    acc[category] = (acc[category] || 0) + 1;
+    return acc;
+  }, {})
+).map(([name, value]) => ({ name, value }));
 
-  // AI Summary
+const statusData = Object.entries(
+  complaints.reduce((acc, complaint) => {
+    const status = complaint.status || "Pending";
+    acc[status] = (acc[status] || 0) + 1;
+    return acc;
+  }, {})
+).map(([name, value]) => ({ name, value }));
+
+const COLORS = [
+  "#00C49F",
+  "#FF8042",
+  "#0088FE",
+  "#FFBB28",
+  "#FF4444",
+];
+
+// AI Summary
   const handleGenerateSummary = async () => {
     try {
       setLoadingSummary(true);
@@ -206,7 +298,104 @@ function AdminDashboard() {
           <h1>{resolvedComplaints}</h1>
         </div>
       </div>
+{/* Charts */}
+<div
+  style={{
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: "30px",
+    marginBottom: "40px",
+  }}
+>
+  {/* Category Chart */}
+  <div
+    style={{
+      background: "#1a1f38",
+      padding: "20px",
+      borderRadius: "12px",
+    }}
+  >
+    <h2
+      style={{
+        textAlign: "center",
+        marginBottom: "20px",
+      }}
+    >
+      Complaints by Category
+    </h2>
 
+    <ResponsiveContainer width="100%" height={300}>
+      <BarChart data={categoryData}>
+        <XAxis dataKey="name" />
+        <YAxis />
+        <Tooltip />
+        <Bar dataKey="value" fill="#38bdf8" />
+      </BarChart>
+    </ResponsiveContainer>
+  </div>
+
+  {/* Status Chart */}
+  <div
+    style={{
+      background: "#1a1f38",
+      padding: "20px",
+      borderRadius: "12px",
+    }}
+  >
+    <h2
+      style={{
+        textAlign: "center",
+        marginBottom: "20px",
+      }}
+    >
+      Complaint Status Distribution
+    </h2>
+
+    <ResponsiveContainer width="100%" height={300}>
+      <PieChart>
+        <Pie
+          data={statusData}
+          dataKey="value"
+          nameKey="name"
+          cx="50%"
+          cy="50%"
+          outerRadius={100}
+          label
+        >
+          {statusData.map((entry, index) => (
+            <Cell
+              key={`cell-${index}`}
+              fill={COLORS[index % COLORS.length]}
+            />
+          ))}
+        </Pie>
+
+        <Tooltip />
+      </PieChart>
+    </ResponsiveContainer>
+  </div>
+</div>
+     {/* Complaint Map */}
+<div
+  style={{
+    background: "#1a1f38",
+    padding: "20px",
+    borderRadius: "12px",
+    marginBottom: "40px",
+  }}
+>
+  <h2
+    style={{
+      textAlign: "center",
+      marginBottom: "20px",
+      color: "white",
+    }}
+  >
+    🗺️ Civic Complaint Map
+  </h2>
+
+  <ComplaintMap complaints={complaints} />
+</div>
       {/* AI Summary */}
       <div
         style={{
@@ -298,9 +487,72 @@ function AdminDashboard() {
             </p>
 
             <p>
-              <b>Priority:</b>{" "}
-              {item.priority || "Not Assigned"}
-            </p>
+  <b>Priority:</b>{" "}
+  {item.priority ||
+    item.aiAnalysis?.match(/Priority:\s*(HIGH|MEDIUM|LOW|CRITICAL)/i)?.[1] ||
+    "MEDIUM"}
+</p>
+{item.imageName && item.imageName !== "" && (
+  <p>
+    <b>Evidence File:</b> 📷 {item.imageName}
+  </p>
+)}
+            <div
+  style={{
+    display: "flex",
+    gap: "10px",
+    marginTop: "15px",
+    flexWrap: "wrap",
+  }}
+>
+  <button
+    onClick={() =>
+      handleStatusUpdate(item.id, "In Progress")
+    }
+    style={{
+      padding: "10px 15px",
+      border: "none",
+      borderRadius: "8px",
+      background: "#f59e0b",
+      color: "white",
+      cursor: "pointer",
+    }}
+  >
+    🟡 In Progress
+  </button>
+
+  <button
+    onClick={() =>
+      handleStatusUpdate(item.id, "Resolved")
+    }
+    style={{
+      padding: "10px 15px",
+      border: "none",
+      borderRadius: "8px",
+      background: "#10b981",
+      color: "white",
+      cursor: "pointer",
+    }}
+  >
+    ✅ Resolve
+  </button>
+
+  <button
+    onClick={() =>
+      handleStatusUpdate(item.id, "Critical")
+    }
+    style={{
+      padding: "10px 15px",
+      border: "none",
+      borderRadius: "8px",
+      background: "#ef4444",
+      color: "white",
+      cursor: "pointer",
+    }}
+  >
+    🔴 Critical
+  </button>
+</div>
           </div>
         ))
       )}

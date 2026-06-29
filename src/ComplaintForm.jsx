@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { saveComplaint } from "./services/firestoreService";
 import { checkDuplicateComplaint } from "./services/duplicateComplaintService";
 import { getDepartmentSuggestion } from "./services/departmentAI";
+import { analyzeComplaintPriority }
+from "./services/complaintAI";
 import {
   User,
   ClipboardList,
@@ -99,6 +101,12 @@ const analyzeComplaint = async () => {
     const result = await getDepartmentSuggestion(
       formData.description
     );
+    const priorityResult =
+  await analyzeComplaintPriority(
+    formData.description
+  );
+
+setPriority(priorityResult);
 
     setDepartmentInfo(result);
     if (result.includes("Water")) {
@@ -169,12 +177,22 @@ if (duplicateResult.duplicate) {
     `⚠ Similar complaint already exists:\n\n"${duplicateResult.existingComplaint.title}"\n\nYour complaint will still be registered.`
   );
 }
-      await saveComplaint({
+       console.log("About to save complaint");
+
+const autoStatus =
+  priority.toUpperCase() === "CRITICAL"
+    ? "Critical"
+    : "Pending";
+
+const docId = await saveComplaint({
   ...formData,
   aiAnalysis: departmentInfo,
+  priority: priority,
   imageName: image ? image.name : "",
-  status: "Pending",
+  status: autoStatus,
 });
+
+console.log("Complaint saved with ID:", docId);
 
       alert(
  `Complaint Submitted Successfully ✅\nID: ${complaintId}`
@@ -188,8 +206,8 @@ if (duplicateResult.duplicate) {
         location: "",
       });
     } catch (err) {
-      console.log(err);
-      alert("Something went wrong.");
+      console.error("Submit error:", err);
+alert(err.message);
     } finally {
       setLoading(false);
     }
@@ -314,7 +332,11 @@ if (duplicateResult.duplicate) {
    <div className="whitespace-pre-wrap leading-8 font-medium">
   {departmentInfo}
 </div>
-
+<div className="mt-4">
+  <p className="text-yellow-400 font-bold">
+    Priority: {priority}
+  </p>
+</div>
 <div className="mt-5 border-t border-slate-700 pt-4">
 
   <h4 className="text-cyan-300 font-semibold mb-3">

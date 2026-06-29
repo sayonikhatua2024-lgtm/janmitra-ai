@@ -2,8 +2,11 @@ import {
   collection,
   addDoc,
   serverTimestamp,
-  getDocs
+  getDocs,
+  doc,
+  updateDoc
 } from "firebase/firestore";
+
 
 import { db } from "../firebase";
 
@@ -113,5 +116,20 @@ export const getAllComplaints = async () => {
   } catch (error) {
     console.log(error);
     return [];
+  }
+};
+
+export const updateComplaintStatus = async (id, newStatus) => {
+  try {
+    const complaintRef = doc(db, "complaints", id);
+
+    await updateDoc(complaintRef, {
+      status: newStatus,
+    });
+
+    return true;
+  } catch (error) {
+    console.error("Error updating complaint:", error);
+    return false;
   }
 };
