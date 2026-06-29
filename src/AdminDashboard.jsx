@@ -1,3 +1,4 @@
+import { generateMPActionPlan } from "./services/mpActionPlanAI";
 import { toast } from "react-toastify";
 import ComplaintMap from "./ComplaintMap";
 import React, { useEffect, useMemo, useState } from "react";
@@ -21,6 +22,8 @@ import {
 
 function AdminDashboard() {
   const [complaints, setComplaints] = useState([]);
+  const [mpPlan, setMpPlan] = useState("");
+const [loadingPlan, setLoadingPlan] = useState(false);
   const [summary, setSummary] = useState("");
   const [loadingSummary, setLoadingSummary] = useState(false);
   const handleStatusUpdate = async (id, status) => {
@@ -152,9 +155,28 @@ const COLORS = [
   "#FFBB28",
   "#FF4444",
 ];
+const handleGenerateMPPlan = async () => {
+  try {
+    setLoadingPlan(true);
 
+    const plan = await generateMPActionPlan(
+      complaints
+    );
+
+    setMpPlan(plan);
+  } catch (error) {
+    console.log(error);
+
+    setMpPlan(
+      "⚠️ Unable to generate MP Action Plan."
+    );
+  } finally {
+    setLoadingPlan(false);
+  }
+};
 // AI Summary
   const handleGenerateSummary = async () => {
+    
     try {
       setLoadingSummary(true);
 
@@ -403,6 +425,7 @@ const COLORS = [
           marginBottom: "30px",
         }}
       >
+
         <button
           onClick={handleGenerateSummary}
           style={{
@@ -419,26 +442,60 @@ const COLORS = [
             ? "Generating Report..."
             : "🤖 Generate Daily Civic Report"}
         </button>
+        <button
+  onClick={handleGenerateMPPlan}
+  style={{
+    padding: "12px 25px",
+    borderRadius: "10px",
+    border: "none",
+    background: "#7c3aed",
+    color: "white",
+    fontSize: "16px",
+    cursor: "pointer",
+    marginLeft: "15px",
+  }}
+>
+  {loadingPlan
+    ? "Generating MP Plan..."
+    : "🏛 Generate Constituency Development Plan"}
+</button>
       </div>
 
       {summary && (
-        <div
-          style={{
-            background: "#1a1f38",
-            borderRadius: "12px",
-            padding: "20px",
-            marginBottom: "30px",
-            whiteSpace: "pre-wrap",
-          }}
-        >
-          <h2 style={{ color: "#38bdf8" }}>
-            AI Civic Report
-          </h2>
+  <div
+    style={{
+      background: "#1a1f38",
+      borderRadius: "12px",
+      padding: "20px",
+      marginBottom: "30px",
+      whiteSpace: "pre-wrap",
+    }}
+  >
+    <h2 style={{ color: "#38bdf8" }}>
+      AI Civic Report
+    </h2>
 
-          <p>{summary}</p>
-        </div>
-      )}
+    <p>{summary}</p>
+  </div>
+)}
 
+{mpPlan && (
+  <div
+    style={{
+      background: "#1a1f38",
+      borderRadius: "12px",
+      padding: "20px",
+      marginBottom: "30px",
+      whiteSpace: "pre-wrap",
+    }}
+  >
+    <h2 style={{ color: "#a855f7" }}>
+      🏛 AI-Powered Constituency Development Plan
+    </h2>
+
+    <p>{mpPlan}</p>
+  </div>
+)}
       {/* Complaint List */}
       {complaints.length === 0 ? (
         <h2 style={{ textAlign: "center" }}>

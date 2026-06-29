@@ -5,7 +5,13 @@ export const getDepartmentSuggestion = async (complaint) => {
   const prompt = `
 You are an expert civic grievance assistant for India.
 
-Analyze the complaint and provide the response exactly in this format:
+The complaint may be written in English, Hindi, Odia, Bengali, or any Indian language.
+
+You must understand the complaint irrespective of language and analyze it correctly.
+
+Always provide the response in English.
+
+Provide the response exactly in this format:
 
 Category: <issue category>
 
