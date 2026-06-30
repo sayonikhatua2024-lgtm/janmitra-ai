@@ -53,6 +53,20 @@ const [trendData, setTrendData] = useState({
   garbage: 0,
   topIssue: "None"
 });
+const [selectedIntervention, setSelectedIntervention] =
+  useState("Road Repair");
+
+const [simulationResult, setSimulationResult] =
+  useState(null);
+  const [parliamentData, setParliamentData] = useState({
+  roads: 0,
+  water: 0,
+  garbage: 0,
+  health: 0,
+  topDemand: "None"
+});
+const [futureForecast, setFutureForecast] =
+  useState(null);
 const [loadingRisk, setLoadingRisk] = useState(false);
 const [loadingPlan, setLoadingPlan] = useState(false);
   const [summary, setSummary] = useState("");
@@ -128,6 +142,8 @@ useEffect(() => {
   calculateHealthScore();
    calculateSDGImpact();
    calculateTrendAnalysis();
+   generateCitizenParliament();
+   generateFutureForecast();
 }, [complaints]);
   // Statistics
   const totalComplaints = complaints.length;
@@ -306,22 +322,28 @@ const handleGenerateSentiment = async () => {
   };
 const calculateHealthScore = () => {
 
-  let roads = 100;
-  let water = 100;
-  let sanitation = 100;
+  const activeComplaints = complaints.filter(
+    c => c.status !== "Resolved"
+  );
 
   const roadComplaints =
-    complaints.filter(c => c.category === "Roads").length;
+    activeComplaints.filter(
+      c => c.category === "Roads"
+    ).length;
 
   const waterComplaints =
-    complaints.filter(c => c.category === "Water").length;
+    activeComplaints.filter(
+      c => c.category === "Water"
+    ).length;
 
   const garbageComplaints =
-    complaints.filter(c => c.category === "Garbage").length;
+    activeComplaints.filter(
+      c => c.category === "Garbage"
+    ).length;
 
-  roads = Math.max(0, 100 - roadComplaints * 10);
-  water = Math.max(0, 100 - waterComplaints * 10);
-  sanitation = Math.max(0, 100 - garbageComplaints * 10);
+  let roads = Math.max(0, 100 - roadComplaints * 10);
+  let water = Math.max(0, 100 - waterComplaints * 10);
+  let sanitation = Math.max(0, 100 - garbageComplaints * 10);
 
   const overall =
     Math.round((roads + water + sanitation) / 3);
@@ -341,12 +363,15 @@ const calculateHealthScore = () => {
 };
 const calculateSDGImpact = () => {
 
-  let sdg3 = 0;   // Health
-  let sdg6 = 0;   // Water
-  let sdg9 = 0;   // Infrastructure
-  let sdg11 = 0;  // Sustainable Cities
+  let sdg3 = 0;
+  let sdg6 = 0;
+  let sdg9 = 0;
+  let sdg11 = 0;
 
   complaints.forEach((complaint) => {
+
+    if (complaint.status === "Resolved")
+      return;
 
     switch (complaint.category) {
 
@@ -378,18 +403,22 @@ const calculateSDGImpact = () => {
     sdg9,
     sdg11
   });
-};  
+};
 const calculateTrendAnalysis = () => {
 
-  const roads = complaints.filter(
+  const activeComplaints = complaints.filter(
+    c => c.status !== "Resolved"
+  );
+
+  const roads = activeComplaints.filter(
     c => c.category === "Roads"
   ).length;
 
-  const water = complaints.filter(
+  const water = activeComplaints.filter(
     c => c.category === "Water"
   ).length;
 
-  const garbage = complaints.filter(
+  const garbage = activeComplaints.filter(
     c => c.category === "Garbage"
   ).length;
 
@@ -412,6 +441,164 @@ const calculateTrendAnalysis = () => {
     garbage,
     topIssue
   });
+};
+const simulateIntervention = () => {
+
+  let result = {};
+
+  switch (selectedIntervention) {
+
+    case "Road Repair":
+      result = {
+        complaints: "-60%",
+        health: "+15",
+        sentiment: "+20%",
+        risk: "-30%",
+        outcome:
+          "Road complaints are expected to reduce significantly, improving overall citizen satisfaction."
+      };
+      break;
+
+    case "Water Supply":
+      result = {
+        complaints: "-50%",
+        health: "+12",
+        sentiment: "+18%",
+        risk: "-40%",
+        outcome:
+          "Improved water supply can reduce future water crises and improve public health."
+      };
+      break;
+
+    case "Drainage Upgrade":
+      result = {
+        complaints: "-45%",
+        health: "+10",
+        sentiment: "+15%",
+        risk: "-50%",
+        outcome:
+          "Drainage upgrades are predicted to substantially reduce urban flooding risks."
+      };
+      break;
+
+    case "Waste Management":
+      result = {
+        complaints: "-35%",
+        health: "+8",
+        sentiment: "+10%",
+        risk: "-20%",
+        outcome:
+          "Improved waste collection can reduce sanitation complaints and disease risk."
+      };
+      break;
+
+    default:
+      break;
+  }
+
+  setSimulationResult(result);
+};
+const generateCitizenParliament = () => {
+
+  const activeComplaints = complaints.filter(
+    c => c.status !== "Resolved"
+  );
+
+  const total = activeComplaints.length;
+
+  if (total === 0) return;
+
+  const roads = Math.round(
+    (activeComplaints.filter(
+      c => c.category === "Roads"
+    ).length / total) * 100
+  );
+
+  const water = Math.round(
+    (activeComplaints.filter(
+      c => c.category === "Water"
+    ).length / total) * 100
+  );
+
+  const garbage = Math.round(
+    (activeComplaints.filter(
+      c => c.category === "Garbage"
+    ).length / total) * 100
+  );
+
+  const health = Math.round(
+    (activeComplaints.filter(
+      c => c.category === "Health"
+    ).length / total) * 100
+  );
+
+  let topDemand = "Road Infrastructure";
+  let max = roads;
+
+  if (water > max) {
+    max = water;
+    topDemand = "Water Supply";
+  }
+
+  if (garbage > max) {
+    max = garbage;
+    topDemand = "Waste Management";
+  }
+
+  if (health > max) {
+    max = health;
+    topDemand = "Healthcare Services";
+  }
+
+  setParliamentData({
+    roads,
+    water,
+    garbage,
+    health,
+    topDemand
+  });
+};
+const generateFutureForecast = () => {
+
+  const roads =
+    complaints.filter(c => c.category === "Roads").length;
+
+  const water =
+    complaints.filter(c => c.category === "Water").length;
+
+  const garbage =
+    complaints.filter(c => c.category === "Garbage").length;
+
+  let forecast = {
+    floodRisk: "Low",
+    roadRisk: "Low",
+    satisfaction: "+10%",
+    recommendation:
+      "Current infrastructure appears stable."
+  };
+
+  if (roads >= 5) {
+    forecast.roadRisk = "High";
+    forecast.satisfaction = "-15%";
+  }
+
+  if (water >= 3) {
+    forecast.floodRisk = "Medium";
+  }
+
+  if (roads >= 5 && water >= 3) {
+    forecast.floodRisk = "High";
+    forecast.satisfaction = "-25%";
+    forecast.recommendation =
+      "Immediate infrastructure intervention required to avoid severe civic disruptions.";
+  }
+
+  if (garbage >= 3) {
+    forecast.recommendation =
+      "Urgent sanitation improvements required to prevent public health issues.";
+  }
+
+  setFutureForecast(forecast);
 };
 return (
     <div
@@ -626,7 +813,348 @@ return (
     padding: "20px",
     marginBottom: "30px",
   }}
+><div
+  style={{
+    background: "#1a1f38",
+    borderRadius: "15px",
+    padding: "25px",
+    marginBottom: "30px",
+    border: "2px solid #7c3aed",
+  }}
 >
+  <h2
+    style={{
+      color: "#a855f7",
+      textAlign: "center",
+      marginBottom: "20px",
+    }}
+  >
+    🏛 Digital Constituency Twin
+  </h2>
+<h3
+  style={{
+    color: "#22c55e",
+    textAlign: "center",
+    marginBottom: "20px",
+  }}
+>
+  🟢 HIGH POSITIVE IMPACT
+</h3>
+  <p
+    style={{
+      textAlign: "center",
+      color: "#cbd5e1",
+      marginBottom: "20px",
+    }}
+  >
+    Simulate governance interventions before implementation.
+  </p>
+
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "center",
+      gap: "15px",
+      flexWrap: "wrap",
+    }}
+  >
+    <select
+      value={selectedIntervention}
+      onChange={(e) =>
+        setSelectedIntervention(e.target.value)
+      }
+     style={{
+  padding: "10px",
+  borderRadius: "10px",
+  fontSize: "16px",
+  background: "#1e293b",
+  color: "white",
+  border: "1px solid #7c3aed",
+}}
+    >
+      <option>Road Repair</option>
+      <option>Water Supply</option>
+      <option>Drainage Upgrade</option>
+      <option>Waste Management</option>
+    </select>
+
+    <button
+      onClick={simulateIntervention}
+      style={{
+        padding: "10px 20px",
+        border: "none",
+        borderRadius: "10px",
+        background: "#7c3aed",
+        color: "white",
+        cursor: "pointer",
+      }}
+    >
+      Simulate Impact
+    </button>
+  </div>
+
+  {simulationResult && (
+    <div
+      style={{
+        marginTop: "25px",
+        lineHeight: "2",
+      }}
+    >
+      <h3>
+        📉 Complaint Reduction:
+        {simulationResult.complaints}
+      </h3>
+
+      <h3>
+        🏥 Health Score Change:
+        {simulationResult.health}
+      </h3>
+
+      <h3>
+        😊 Citizen Sentiment Change:
+        {simulationResult.sentiment}
+      </h3>
+
+      <h3>
+        ⚠ Future Risk Reduction:
+        {simulationResult.risk}
+      </h3>
+
+      <div
+  style={{
+    marginTop: "20px",
+    background: "#0f172a",
+    padding: "15px",
+    borderRadius: "10px",
+  }}
+>
+  <h3 style={{ color: "#22c55e" }}>
+    📊 Expected Governance Outcome
+  </h3>
+
+  <p>
+    ✔ Complaint Reduction:
+    {simulationResult.complaints}
+  </p>
+
+  <p>
+    ✔ Citizen Satisfaction Expected to Increase by
+    {" "}
+    {simulationResult.sentiment}
+  </p>
+
+  <p>
+    ✔ Estimated Health Score Improvement:
+    {" "}
+    {simulationResult.health}
+  </p>
+
+  <p>
+    ✔ Future Risk Reduction:
+    {" "}
+    {simulationResult.risk}
+  </p>
+</div>
+    </div>
+  )}
+</div>
+<div
+  style={{
+    background: "#1a1f38",
+    borderRadius: "15px",
+    padding: "25px",
+    marginBottom: "30px",
+    border: "2px solid #f59e0b"
+  }}
+>
+
+  <h2
+    style={{
+      color: "#f59e0b",
+      textAlign: "center"
+    }}
+  >
+    🏛 Citizen Voice Parliament
+  </h2>
+
+  <p
+    style={{
+      textAlign: "center",
+      color: "#cbd5e1"
+    }}
+  >
+    Every complaint acts as a democratic vote.
+  </p>
+
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns:
+        "repeat(auto-fit,minmax(200px,1fr))",
+      gap: "20px",
+      marginTop: "25px"
+    }}
+  >
+
+    <div>
+      <h3>🛣 Road Repair</h3>
+      <h1
+  style={{
+    color: "#38bdf8",
+    fontSize: "2rem",
+    marginTop: "10px"
+  }}
+>
+  {parliamentData.roads}%
+</h1>
+    </div>
+
+    <div>
+      <h3>💧 Water Supply</h3>
+      <h1
+  style={{
+    color: "#38bdf8",
+    fontSize: "2rem",
+    marginTop: "10px"
+  }}
+>
+  {parliamentData.water}%
+</h1>
+    </div>
+
+    <div>
+      <h3>🗑 Waste Management</h3>
+     <h1
+  style={{
+    color: "#38bdf8",
+    fontSize: "2rem",
+    marginTop: "10px"
+  }}
+>
+  {parliamentData.garbage}%
+</h1>
+    </div>
+
+    <div>
+      <h3>🏥 Health Services</h3>
+      <h1
+  style={{
+    color: "#38bdf8",
+    fontSize: "2rem",
+    marginTop: "10px"
+  }}
+>
+  {parliamentData.health}%
+</h1>
+    </div>
+
+  </div>
+
+  <div
+  style={{
+    marginTop: "25px",
+    background: "#0f172a",
+    padding: "20px",
+    borderRadius: "10px",
+    textAlign: "center"
+  }}
+>
+  <h3 style={{ color: "#22c55e" }}>
+    🏛 People's Mandate
+  </h3>
+
+  <h1 style={{ color: "#f59e0b" }}>
+    {parliamentData.topDemand}
+  </h1>
+
+  <p
+    style={{
+      color: "#cbd5e1",
+      marginTop: "10px"
+    }}
+  >
+    Based on collective citizen grievances,
+    this is the highest priority area requiring
+    immediate government intervention.
+  </p>
+</div>
+<div
+  style={{
+    background: "#1a1f38",
+    borderRadius: "15px",
+    padding: "25px",
+    marginBottom: "30px",
+    border: "2px solid #06b6d4"
+  }}
+>
+
+  <h2
+    style={{
+      color: "#06b6d4",
+      textAlign: "center"
+    }}
+  >
+    ⏳ JanMitra Time Machine
+  </h2>
+
+  <p
+    style={{
+      textAlign: "center",
+      color: "#cbd5e1"
+    }}
+  >
+    Predicting constituency conditions 6 months ahead.
+  </p>
+
+  {futureForecast && (
+
+    <div
+      style={{
+        marginTop: "25px",
+        display: "grid",
+        gridTemplateColumns:
+          "repeat(auto-fit,minmax(250px,1fr))",
+        gap: "20px"
+      }}
+    >
+
+      <div>
+        <h3>🌊 Flood Risk</h3>
+        <h1>{futureForecast.floodRisk}</h1>
+      </div>
+
+      <div>
+        <h3>🛣 Road Failure Risk</h3>
+        <h1>{futureForecast.roadRisk}</h1>
+      </div>
+
+      <div>
+        <h3>😊 Citizen Satisfaction Forecast</h3>
+        <h1>{futureForecast.satisfaction}</h1>
+      </div>
+
+      <div
+        style={{
+          gridColumn: "1/-1",
+          background: "#0f172a",
+          padding: "20px",
+          borderRadius: "10px"
+        }}
+      >
+        <h3 style={{ color: "#f59e0b" }}>
+          🚨 AI Recommendation
+        </h3>
+
+        <p style={{ color: "#cbd5e1" }}>
+          {futureForecast.recommendation}
+        </p>
+      </div>
+
+    </div>
+  )}
+
+</div>
+</div>
   <h2
     style={{
       color: "#38bdf8",

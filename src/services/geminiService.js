@@ -20,10 +20,44 @@ export const askGemini = async (prompt) => {
 
     console.error("Gemini Error:", error);
 
-    if (error.message) {
-      return error.message;
-    }
+    // Retry once after 3 seconds
+    try {
 
-    return "Something went wrong.";
+      console.log("Retrying Gemini request...");
+
+      await new Promise(resolve =>
+        setTimeout(resolve, 3000)
+      );
+
+      const retryResult =
+        await model.generateContent(prompt);
+
+      const retryResponse =
+        await retryResult.response;
+
+      return retryResponse.text();
+
+    } catch (retryError) {
+
+      console.error(
+        "Retry failed:",
+        retryError
+      );
+
+      return `
+AI servers are currently busy.
+
+Priority: MEDIUM
+
+Recommended Citizen Actions:
+
+✔ Register complaint immediately.
+✔ Upload photo evidence.
+✔ Save complaint ID for tracking.
+✔ Contact department if unresolved.
+
+Please try again after a few seconds.
+`;
+    }
   }
 };

@@ -66,7 +66,24 @@ ${complaintSummary}
     const result = await model.generateContent(prompt);
     return result.response.text();
   } catch (error) {
-    console.error(error);
-    return "Unable to generate MP Action Plan.";
-  }
+
+  console.error(error);
+
+  return `
+MP Action Plan generation is temporarily unavailable.
+
+Possible Reasons:
+- Gemini API quota exceeded.
+- AI servers are busy.
+
+Recommended Administrative Actions:
+
+1. Prioritize critical complaints.
+2. Focus on top hotspot locations.
+3. Allocate resources to Roads and Water.
+4. Review citizen grievances manually.
+
+Please try again later.
+`;
+}
 };
