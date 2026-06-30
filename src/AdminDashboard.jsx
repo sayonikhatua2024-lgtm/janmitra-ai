@@ -1,3 +1,11 @@
+import { generateInsight }
+from "./services/governanceInsightAI";
+import {
+generateSustainabilityInsight
+}
+from "./services/sustainabilityInsightAI";
+import { generateGovernanceAdvice }
+from "./services/governanceCopilotAI";
 import { generateSentimentAnalysis }
 from "./services/sentimentAI";
 import { generateBudgetAllocation }
@@ -41,6 +49,35 @@ function AdminDashboard() {
 const [loadingBudget, setLoadingBudget] = useState(false);
 const [sentiment, setSentiment] = useState("");
 const [loadingSentiment, setLoadingSentiment] = useState(false);
+const [copilotQuery, setCopilotQuery] = useState("");
+const [copilotResult, setCopilotResult] = useState("");
+const [copilotLoading, setCopilotLoading] = useState(false);
+const [disasterAlert, setDisasterAlert] = useState({});
+const [socialIndex, setSocialIndex] = useState({});
+const [sustainabilityInsight,setSustainabilityInsight] = useState("");
+
+const [governanceInsight,
+setGovernanceInsight] = useState("");
+
+const [benchmarkInsight,
+setBenchmarkInsight] = useState("");
+
+const [disasterInsight,
+setDisasterInsight] = useState("");
+
+const [futureInsight,
+setFutureInsight] = useState("");
+const [benchmarkData, setBenchmarkData] = useState({});
+const [availableBudget, setAvailableBudget] = useState(100);
+
+const [budgetSimulation, setBudgetSimulation] = useState(null);
+const [governanceRank, setGovernanceRank] =
+  useState({});
+const [sustainabilityData, setSustainabilityData] = useState({
+  score: 100,
+  level: "Excellent",
+  carbonImpact: 0
+});
   const [sdgData, setSdgData] = useState({
   sdg3: 0,
   sdg6: 0,
@@ -144,6 +181,18 @@ useEffect(() => {
    calculateTrendAnalysis();
    generateCitizenParliament();
    generateFutureForecast();
+   generateDisasterAlert();
+   generateSustainabilityIndex();
+   generateSocialStabilityIndex();
+   generateBenchmarkData();
+   generateGovernanceRank();
+}, [complaints]);
+useEffect(() => {
+
+  if (complaints.length === 0) return;
+
+  loadAIInsights();
+
 }, [complaints]);
   // Statistics
   const totalComplaints = complaints.length;
@@ -163,21 +212,29 @@ useEffect(() => {
   ).length;
 
   // Hotspots
-  const hotspots = useMemo(() => {
-    const counts = {};
+ const hotspots = useMemo(() => {
 
-    complaints.forEach((complaint) => {
-      const location = complaint.location;
+  const activeComplaints = complaints.filter(
+    c => c.status !== "Resolved"
+  );
 
-      if (!location) return;
+  const counts = {};
 
-      counts[location] = (counts[location] || 0) + 1;
-    });
+  activeComplaints.forEach((complaint) => {
 
-    return Object.entries(counts)
-      .filter(([_, count]) => count >= 2)
-      .sort((a, b) => b[1] - a[1]);
-  }, [complaints]);
+    const location = complaint.location;
+
+    if (!location) return;
+
+    counts[location] =
+      (counts[location] || 0) + 1;
+  });
+
+  return Object.entries(counts)
+    .filter(([_, count]) => count >= 2)
+    .sort((a, b) => b[1] - a[1]);
+
+}, [complaints]);
   const alerts = hotspots
   .filter(([_, count]) => count >= 3)
   .map(([location, count]) => ({
@@ -560,14 +617,21 @@ const generateCitizenParliament = () => {
 };
 const generateFutureForecast = () => {
 
-  const roads =
-    complaints.filter(c => c.category === "Roads").length;
+  const activeComplaints = complaints.filter(
+    c => c.status !== "Resolved"
+  );
 
-  const water =
-    complaints.filter(c => c.category === "Water").length;
+  const roads = activeComplaints.filter(
+    c => c.category === "Roads"
+  ).length;
 
-  const garbage =
-    complaints.filter(c => c.category === "Garbage").length;
+  const water = activeComplaints.filter(
+    c => c.category === "Water"
+  ).length;
+
+  const garbage = activeComplaints.filter(
+    c => c.category === "Garbage"
+  ).length;
 
   let forecast = {
     floodRisk: "Low",
@@ -599,6 +663,444 @@ const generateFutureForecast = () => {
   }
 
   setFutureForecast(forecast);
+};
+const handleGovernanceCopilot = async () => {
+
+  if (!copilotQuery) return;
+
+  setCopilotLoading(true);
+
+  const result = await generateGovernanceAdvice(
+    copilotQuery,
+    complaints
+  );
+
+  setCopilotResult(result);
+
+  setCopilotLoading(false);
+};
+const startVoiceInput = () => {
+
+  const SpeechRecognition =
+    window.SpeechRecognition ||
+    window.webkitSpeechRecognition;
+
+  if (!SpeechRecognition) {
+    alert("Speech recognition is not supported in this browser.");
+    return;
+  }
+
+  const recognition = new SpeechRecognition();
+
+  recognition.lang = "en-IN";
+  recognition.start();
+
+  recognition.onresult = (event) => {
+    setCopilotQuery(
+      event.results[0][0].transcript
+    );
+  };
+
+  recognition.onerror = () => {
+    alert("Voice input failed. Please try again.");
+  };
+};
+const generateDisasterAlert = () => {
+
+  const activeComplaints = complaints.filter(
+    c => c.status !== "Resolved"
+  );
+
+  const waterIssues = activeComplaints.filter(
+    c => c.category === "Water"
+  ).length;
+
+  const roadIssues = activeComplaints.filter(
+    c => c.category === "Roads"
+  ).length;
+
+  const garbageIssues = activeComplaints.filter(
+    c => c.category === "Garbage"
+  ).length;
+
+  let alert = {
+    level: "LOW",
+    message: "No major disaster threat detected.",
+    recommendation: "Continue regular monitoring."
+  };
+
+  if (waterIssues >= 3) {
+    alert = {
+      level: "MEDIUM",
+      message:
+        "Potential urban flooding risk detected due to unresolved water complaints.",
+      recommendation:
+        "Inspect drainage systems and deploy preventive teams."
+    };
+  }
+
+  if (roadIssues >= 5) {
+    alert = {
+      level: "HIGH",
+      message:
+        "Critical infrastructure vulnerability detected. Road failures may occur.",
+      recommendation:
+        "Immediate infrastructure repair and emergency preparedness required."
+    };
+  }
+
+  if (garbageIssues >= 3) {
+    alert = {
+      level: "MEDIUM",
+      message:
+        "Public health outbreak risk detected due to waste accumulation.",
+      recommendation:
+        "Urgent sanitation drive recommended."
+    };
+  }
+
+  setDisasterAlert(alert);
+};
+const generateSustainabilityIndex = () => {
+
+  const activeComplaints = complaints.filter(
+    c => c.status !== "Resolved"
+  );
+
+  const garbage = activeComplaints.filter(
+    c => c.category === "Garbage"
+  ).length;
+
+  const water = activeComplaints.filter(
+    c => c.category === "Water"
+  ).length;
+
+  const roads = activeComplaints.filter(
+    c => c.category === "Roads"
+  ).length;
+
+  let score = 100;
+
+  score -= garbage * 10;
+  score -= water * 5;
+  score -= roads * 3;
+
+  if (score < 0) score = 0;
+
+  let level = "Excellent";
+
+  if (score < 80) level = "Good";
+  if (score < 60) level = "Moderate";
+  if (score < 40) level = "Poor";
+
+  const carbonImpact =
+    garbage * 8 + roads * 5 + water * 3;
+
+  setSustainabilityData({
+    score,
+    level,
+    carbonImpact
+  });
+};
+const generateSocialStabilityIndex = () => {
+
+  const activeComplaints = complaints.filter(
+    c => c.status !== "Resolved"
+  );
+
+  const critical = activeComplaints.filter(
+    c =>
+      c.status === "Critical" ||
+      c.priority === "CRITICAL"
+  ).length;
+
+  const total = activeComplaints.length;
+
+  let score = 100 - critical * 12;
+
+  if (score < 0) score = 0;
+
+  let mood = "😊 Optimistic";
+  let stability = "Stable";
+
+  if (score < 80) {
+    mood = "😐 Concerned";
+  }
+
+  if (score < 60) {
+    mood = "😟 Frustrated";
+    stability = "Moderate Risk";
+  }
+
+  if (score < 40) {
+    mood = "😠 Dissatisfied";
+    stability = "High Risk";
+  }
+
+  if (score < 20) {
+    mood = "🚨 Social Tension Rising";
+    stability = "Critical";
+  }
+
+  let insight = "";
+
+if (score >= 80) {
+  insight =
+    "Citizen trust is high and governance performance is stable. Continue proactive governance initiatives.";
+}
+else if (score >= 60) {
+  insight =
+    "Moderate public concern detected. Resolving pending grievances can significantly improve citizen confidence.";
+}
+else if (score >= 40) {
+  insight =
+    "Citizen dissatisfaction is increasing. Immediate intervention on critical complaints is strongly recommended.";
+}
+else {
+  insight =
+    "Social stability is at risk. Urgent governance action is required to restore public trust.";
+}
+
+setSocialIndex({
+  score,
+  mood,
+  stability,
+  activeCitizens: total,
+  insight
+});
+};
+const generateBenchmarkData = () => {
+
+  const citizenScore = socialIndex.score || 0;
+  const sustainabilityScore =
+    sustainabilityData.score || 0;
+
+  const roadScore =
+    Math.max(100 - (
+      complaints.filter(
+        c =>
+          c.category === "Roads" &&
+          c.status !== "Resolved"
+      ).length * 10
+    ), 0);
+
+  const waterScore =
+    Math.max(100 - (
+      complaints.filter(
+        c =>
+          c.category === "Water" &&
+          c.status !== "Resolved"
+      ).length * 10
+    ), 0);
+
+  let insight = "";
+
+if (waterScore < 60) {
+  insight =
+    "Water infrastructure is performing below the national average. Prioritizing water-related grievances can significantly improve constituency rankings.";
+}
+else if (roadScore < 60) {
+  insight =
+    "Road infrastructure performance is below the national benchmark. Accelerated road maintenance is recommended.";
+}
+else if (citizenScore >= 85) {
+  insight =
+    "Citizen satisfaction is exceptionally high. The constituency is performing among the top governance quartiles nationally.";
+}
+else {
+  insight =
+    "Overall governance performance is strong. Resolving high-priority complaints can further improve national standing.";
+}
+
+setBenchmarkData({
+  citizenScore,
+  roadScore,
+  waterScore,
+  sustainabilityScore,
+  insight
+});
+};
+const loadSustainabilityInsight =
+async () => {
+
+  const insight =
+    await generateSustainabilityInsight(
+      complaints,
+      sustainabilityData.score,
+      sustainabilityData.carbonImpact
+    );
+
+  setSustainabilityInsight(insight);
+};
+const loadAIInsights = async () => {
+
+  if (complaints.length === 0) return;
+
+  const sustainability =
+    await generateInsight(
+      "Sustainability",
+      complaints,
+      sustainabilityData
+    );
+
+  const governance =
+    await generateInsight(
+      "Citizen Governance",
+      complaints,
+      socialIndex
+    );
+
+  const benchmark =
+    await generateInsight(
+      "National Benchmark",
+      complaints,
+      benchmarkData
+    );
+
+  const disaster =
+    await generateInsight(
+      "Disaster Prediction",
+      complaints,
+      disasterAlert
+    );
+
+  const future =
+    await generateInsight(
+      "Future Forecast",
+      complaints,
+      futureForecast
+    );
+
+  setSustainabilityInsight(
+    sustainability
+  );
+
+  setGovernanceInsight(
+    governance
+  );
+
+  setBenchmarkInsight(
+    benchmark
+  );
+
+  setDisasterInsight(
+    disaster
+  );
+
+  setFutureInsight(
+    future
+  );
+};
+const simulateBudgetAllocation = () => {
+
+  const unresolvedComplaints = complaints.filter(
+    c => c.status !== "Resolved"
+  );
+
+  const roadsCount = unresolvedComplaints.filter(
+    c => c.category === "Roads"
+  ).length;
+
+  const waterCount = unresolvedComplaints.filter(
+    c => c.category === "Water"
+  ).length;
+
+  const healthCount = unresolvedComplaints.filter(
+    c => c.category === "Health"
+  ).length;
+
+  const garbageCount = unresolvedComplaints.filter(
+    c => c.category === "Garbage"
+  ).length;
+
+  const totalIssues =
+    roadsCount +
+    waterCount +
+    healthCount +
+    garbageCount;
+
+  if (totalIssues === 0) {
+
+    setBudgetSimulation({
+      roads: 0,
+      water: 0,
+      health: 0,
+      garbage: 0,
+      satisfaction: socialIndex.score || 80,
+      reduction: 0
+    });
+
+    return;
+  }
+
+  const roadsBudget = Math.round(
+    (roadsCount / totalIssues) * availableBudget
+  );
+
+  const waterBudget = Math.round(
+    (waterCount / totalIssues) * availableBudget
+  );
+
+  const healthBudget = Math.round(
+    (healthCount / totalIssues) * availableBudget
+  );
+
+  const garbageBudget =
+    availableBudget -
+    roadsBudget -
+    waterBudget -
+    healthBudget;
+
+  setBudgetSimulation({
+
+    roads: roadsBudget,
+
+    water: waterBudget,
+
+    health: healthBudget,
+
+    garbage: garbageBudget,
+
+    satisfaction: Math.min(
+      (socialIndex.score || 70) + 20,
+      100
+    ),
+
+    reduction: Math.min(
+      unresolvedComplaints.length * 3,
+      40
+    )
+  });
+};
+const generateGovernanceRank = () => {
+
+  const score = healthScore.overall || 0;
+
+  let nationalRank = "Needs Improvement";
+  let category = "Emerging";
+  let trust = "Low";
+
+  if (score >= 90) {
+    nationalRank = "Top 10%";
+    category = "Excellent";
+    trust = "Very High";
+  }
+  else if (score >= 75) {
+    nationalRank = "Top 25%";
+    category = "High Performer";
+    trust = "High";
+  }
+  else if (score >= 60) {
+    nationalRank = "Top 50%";
+    category = "Average";
+    trust = "Moderate";
+  }
+
+  setGovernanceRank({
+    nationalRank,
+    category,
+    trust
+  });
 };
 return (
     <div
@@ -807,13 +1309,6 @@ return (
 
 </div>
 <div
-  style={{
-    background: "#1a1f38",
-    borderRadius: "15px",
-    padding: "20px",
-    marginBottom: "30px",
-  }}
-><div
   style={{
     background: "#1a1f38",
     borderRadius: "15px",
@@ -1078,6 +1573,9 @@ return (
     immediate government intervention.
   </p>
 </div>
+</div>
+
+{/* JanMitra Time Machine */}
 <div
   style={{
     background: "#1a1f38",
@@ -1087,7 +1585,6 @@ return (
     border: "2px solid #06b6d4"
   }}
 >
-
   <h2
     style={{
       color: "#06b6d4",
@@ -1107,7 +1604,6 @@ return (
   </p>
 
   {futureForecast && (
-
     <div
       style={{
         marginTop: "25px",
@@ -1117,7 +1613,6 @@ return (
         gap: "20px"
       }}
     >
-
       <div>
         <h3>🌊 Flood Risk</h3>
         <h1>{futureForecast.floodRisk}</h1>
@@ -1146,14 +1641,693 @@ return (
         </h3>
 
         <p style={{ color: "#cbd5e1" }}>
-          {futureForecast.recommendation}
+          {futureInsight || futureForecast.recommendation}
         </p>
       </div>
-
     </div>
   )}
+</div>
+  <div
+  style={{
+    background: "#1a1f38",
+    borderRadius: "15px",
+    padding: "25px",
+    marginBottom: "30px",
+  }}
+>
+  <div
+  style={{
+    background: "#1a1f38",
+    borderRadius: "15px",
+    padding: "25px",
+    marginBottom: "30px",
+    border: "2px solid #3b82f6",
+  }}
+>
+  <h2
+    style={{
+      textAlign: "center",
+      color: "#3b82f6",
+    }}
+  >
+    🤖 AI Governance Copilot
+  </h2>
+
+  <p
+    style={{
+      textAlign: "center",
+      color: "#cbd5e1",
+    }}
+  >
+    Ask JanMitra how governance decisions may affect the constituency.
+  </p>
+<div
+  style={{
+    display: "flex",
+    gap: "10px",
+    justifyContent: "center",
+    flexWrap: "wrap",
+    marginTop: "20px",
+    marginBottom: "20px"
+  }}
+>
+
+  <button
+    onClick={() =>
+      setCopilotQuery(
+        "What if ₹100 crore is invested in roads in Bhubaneswar?"
+      )
+    }
+  >
+    🛣 Roads Investment
+  </button>
+
+  <button
+    onClick={() =>
+      setCopilotQuery(
+        "What happens if all water complaints are resolved?"
+      )
+    }
+  >
+    💧 Water Resolution
+  </button>
+
+  <button
+    onClick={() =>
+      setCopilotQuery(
+        "What if smart waste management is implemented?"
+      )
+    }
+  >
+    🗑 Smart Waste
+  </button>
 
 </div>
+  <input
+    type="text"
+    placeholder="Example: What if ₹50 Crore is invested in roads?"
+    value={copilotQuery}
+    onChange={(e) =>
+      setCopilotQuery(e.target.value)
+    }
+    style={{
+      width: "100%",
+      padding: "12px",
+      marginTop: "20px",
+      borderRadius: "10px",
+      border: "none",
+      fontSize: "16px",
+    }}
+  />
+<button
+  onClick={startVoiceInput}
+  style={{
+    marginTop: "10px",
+    marginLeft: "10px",
+    padding: "10px 20px",
+    background: "#ec4899",
+    color: "white",
+    border: "none",
+    borderRadius: "10px",
+    cursor: "pointer"
+  }}
+>
+  🎤 Speak Question
+</button>
+  <button
+    onClick={handleGovernanceCopilot}
+    style={{
+      marginTop: "20px",
+      padding: "12px 25px",
+      background: "#3b82f6",
+      color: "white",
+      border: "none",
+      borderRadius: "10px",
+      cursor: "pointer",
+    }}
+  >
+    {copilotLoading
+  ? "🤖 JanMitra is Thinking..."
+  : "🚀 Ask AI Copilot"}
+  </button>
+
+  {copilotResult && (
+    <div
+      style={{
+  marginTop: "20px",
+  background: "#0f172a",
+  padding: "25px",
+  borderRadius: "12px",
+  whiteSpace: "pre-wrap",
+  lineHeight: "2",
+  color: "#e2e8f0"
+}}
+    >
+      {copilotResult}
+      <hr style={{ margin: "20px 0" }} />
+
+<h3 style={{ color: "#22c55e" }}>
+  🎯 Governance Impact Score
+</h3>
+
+<h1 style={{ color: "#38bdf8" }}>
+  {healthScore.overall + 5}/100
+</h1>
+
+<p style={{ color: "#cbd5e1" }}>
+  JanMitra predicts significant governance improvement if this recommendation is implemented.
+</p>
+    </div>
+  )}
+</div>
+<button
+  onClick={() => navigator.clipboard.writeText(copilotResult)}
+  style={{
+    marginTop: "15px",
+    padding: "10px 20px",
+    background: "#22c55e",
+    border: "none",
+    borderRadius: "10px",
+    color: "white",
+    cursor: "pointer"
+  }}
+>
+  📋 Copy Recommendation
+</button>
+<div
+  style={{
+    background: "#1a1f38",
+    borderRadius: "15px",
+    padding: "25px",
+    marginBottom: "30px",
+    border: "2px solid #ef4444"
+  }}
+>
+  <h2
+    style={{
+      textAlign: "center",
+      color: "#ef4444"
+    }}
+  >
+    🚨 Dynamic Disaster Early Warning
+  </h2>
+
+  <h1
+    style={{
+      textAlign: "center",
+      color:
+        disasterAlert.level === "HIGH"
+          ? "#ef4444"
+          : disasterAlert.level === "MEDIUM"
+          ? "#f59e0b"
+          : "#22c55e"
+    }}
+  >
+    {disasterAlert.level} RISK
+  </h1>
+
+  <p
+    style={{
+      textAlign: "center",
+      color: "#cbd5e1",
+      fontSize: "18px"
+    }}
+  >
+    {disasterAlert.message}
+  </p>
+
+  <div
+    style={{
+      marginTop: "20px",
+      background: "#0f172a",
+      padding: "20px",
+      borderRadius: "10px"
+    }}
+  >
+    <h3 style={{ color: "#38bdf8" }}>
+      Recommended Action
+    </h3>
+
+    <p style={{ color: "#cbd5e1" }}>
+      {disasterInsight || disasterAlert.recommendation}
+    </p>
+  </div>
+</div>
+<div
+  style={{
+    background: "#1a1f38",
+    borderRadius: "15px",
+    padding: "25px",
+    marginBottom: "30px",
+    border: "2px solid #22c55e"
+  }}
+>
+  <h2
+    style={{
+      textAlign: "center",
+      color: "#22c55e"
+    }}
+  >
+    🌍 Constituency Sustainability Index
+  </h2>
+
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns:
+        "repeat(auto-fit,minmax(250px,1fr))",
+      gap: "20px",
+      marginTop: "25px"
+    }}
+  >
+
+    <div>
+      <h3>🌱 Sustainability Score</h3>
+      <h1>{sustainabilityData.score}/100</h1>
+    </div>
+
+    <div>
+      <h3>🏆 Sustainability Level</h3>
+      <h1>{sustainabilityData.level}</h1>
+    </div>
+
+    <div>
+      <h3>☁ Estimated Carbon Impact</h3>
+      <h1>
+  {sustainabilityData.carbonImpact} tCO₂
+</h1>
+    </div>
+
+  </div>
+
+  <div
+    style={{
+      marginTop: "20px",
+      background: "#0f172a",
+      padding: "20px",
+      borderRadius: "10px"
+    }}
+  >
+    <h3 style={{ color: "#38bdf8" }}>
+      🌿 Sustainability Recommendation
+    </h3>
+
+    <p style={{ color: "#cbd5e1" }}>
+  {sustainabilityInsight}
+</p>
+  </div>
+</div>
+<div
+  style={{
+    background: "#1a1f38",
+    borderRadius: "15px",
+    padding: "25px",
+    marginBottom: "30px",
+    border: "2px solid #ec4899"
+  }}
+>
+  <h2
+    style={{
+      textAlign: "center",
+      color: "#ec4899"
+    }}
+  >
+    🧠 Citizen Mood & Social Stability Index
+  </h2>
+
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns:
+        "repeat(auto-fit,minmax(250px,1fr))",
+      gap: "20px",
+      marginTop: "25px"
+    }}
+  >
+    <div>
+  <h3>😊 Citizen Mood</h3>
+
+  <h1
+    style={{
+      color:
+        socialIndex.score >= 80
+          ? "#22c55e"
+          : socialIndex.score >= 50
+          ? "#f59e0b"
+          : "#ef4444"
+    }}
+  >
+    {socialIndex.mood}
+  </h1>
+</div>
+
+    <div>
+  <h3>⚖ Social Stability</h3>
+
+  <h1
+    style={{
+      color:
+        socialIndex.stability === "Stable"
+          ? "#22c55e"
+          : socialIndex.stability === "Moderate Risk"
+          ? "#f59e0b"
+          : "#ef4444"
+    }}
+  >
+    {socialIndex.stability}
+  </h1>
+</div>
+
+    <div>
+  <h3>📊 Stability Score</h3>
+
+  <h1>{socialIndex.score}/100</h1>
+
+  <p
+    style={{
+      color:
+        socialIndex.score >= 80
+          ? "#22c55e"
+          : "#ef4444"
+    }}
+  >
+    {socialIndex.score >= 80
+      ? "📈 Citizen confidence increasing"
+      : "📉 Citizen confidence declining"}
+  </p>
+</div>
+
+    <div>
+      <h3>👥 Active Citizens</h3>
+      <h1>{socialIndex.activeCitizens}</h1>
+    </div>
+  </div>
+
+  <div
+    style={{
+      marginTop: "20px",
+      background: "#0f172a",
+      padding: "20px",
+      borderRadius: "10px"
+    }}
+  >
+    <h3 style={{ color: "#38bdf8" }}>
+      🏛 Governance Insight
+    </h3>
+
+    <p style={{ color: "#cbd5e1" }}>
+  {governanceInsight || socialIndex.insight}
+</p>
+    <div
+  style={{
+    marginTop: "20px",
+    background: "#111827",
+    padding: "20px",
+    borderRadius: "10px"
+  }}
+>
+  <h3 style={{ color: "#f59e0b" }}>
+    🗳 Electoral Sentiment Forecast
+  </h3>
+
+  <p style={{ color: "#cbd5e1" }}>
+    {socialIndex.score >= 80
+      ? "High public satisfaction detected. Positive electoral sentiment expected."
+      : socialIndex.score >= 50
+      ? "Mixed citizen sentiment detected across the constituency."
+      : "Negative citizen sentiment detected. Immediate governance intervention recommended."}
+  </p>
+</div>
+  </div>
+</div>
+<div
+  style={{
+    background: "#1a1f38",
+    borderRadius: "15px",
+    padding: "25px",
+    marginBottom: "30px",
+    border: "2px solid #3b82f6"
+  }}
+>
+  <h2
+    style={{
+      textAlign: "center",
+      color: "#3b82f6"
+    }}
+  >
+    🏆 National Governance Benchmarking
+  </h2>
+
+  <p
+    style={{
+      textAlign: "center",
+      color: "#cbd5e1"
+    }}
+  >
+    Compare constituency performance against
+    AI-generated national governance benchmarks.
+  </p>
+
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns:
+        "repeat(auto-fit,minmax(250px,1fr))",
+      gap: "20px",
+      marginTop: "25px"
+    }}
+  >
+
+    <div>
+      <h3>😊 Citizen Satisfaction</h3>
+
+      <h1 style={{ color: "#22c55e" }}>
+        {benchmarkData.citizenScore}/100
+      </h1>
+
+      <p>National Average: 72/100</p>
+    </div>
+
+    <div>
+      <h3>🛣 Road Infrastructure</h3>
+
+      <h1 style={{ color: "#f59e0b" }}>
+        {benchmarkData.roadScore}/100
+      </h1>
+
+      <p>National Average: 70/100</p>
+    </div>
+
+    <div>
+      <h3>💧 Water Services</h3>
+
+      <h1 style={{ color: "#38bdf8" }}>
+        {benchmarkData.waterScore}/100
+      </h1>
+
+      <p>National Average: 68/100</p>
+    </div>
+
+    <div>
+      <h3>🌍 Sustainability</h3>
+
+      <h1 style={{ color: "#22c55e" }}>
+        {benchmarkData.sustainabilityScore}/100
+      </h1>
+
+      <p>National Average: 60/100</p>
+    </div>
+
+  </div>
+
+  <div
+    style={{
+      marginTop: "25px",
+      background: "#0f172a",
+      padding: "20px",
+      borderRadius: "10px"
+    }}
+  >
+    <h3 style={{ color: "#f59e0b" }}>
+      🤖 AI Benchmark Insight
+    </h3>
+
+    <p style={{ color: "#cbd5e1" }}>
+  {benchmarkInsight || benchmarkData.insight}
+</p>
+  </div>
+</div>
+<div
+  style={{
+    background: "#1a1f38",
+    borderRadius: "15px",
+    padding: "25px",
+    marginBottom: "30px",
+    border: "2px solid #10b981"
+  }}
+>
+  <h2
+    style={{
+      textAlign: "center",
+      color: "#10b981"
+    }}
+  >
+    💰 Interactive AI Budget Optimizer
+  </h2>
+
+  <p
+    style={{
+      textAlign: "center",
+      color: "#cbd5e1",
+      marginBottom: "20px"
+    }}
+  >
+    Simulate optimal constituency budget allocation for maximum citizen impact.
+  </p>
+
+  <div
+    style={{
+      display: "flex",
+      gap: "15px",
+      flexWrap: "wrap",
+      alignItems: "center",
+      justifyContent: "center"
+    }}
+  >
+    <input
+      type="number"
+      value={availableBudget}
+      onChange={(e) =>
+        setAvailableBudget(Number(e.target.value))
+      }
+      placeholder="Enter Budget (₹ Crores)"
+      style={{
+        padding: "12px",
+        borderRadius: "10px",
+        border: "1px solid #334155",
+        minWidth: "250px",
+        background: "#0f172a",
+        color: "white"
+      }}
+    />
+
+    <button
+      onClick={simulateBudgetAllocation}
+      style={{
+        background: "#10b981",
+        color: "white",
+        border: "none",
+        padding: "12px 25px",
+        borderRadius: "10px",
+        cursor: "pointer",
+        fontWeight: "bold"
+      }}
+    >
+      🚀 Optimize Budget
+    </button>
+  </div>
+
+  {budgetSimulation && (
+    <div
+      style={{
+        marginTop: "30px",
+        display: "grid",
+        gridTemplateColumns:
+          "repeat(auto-fit,minmax(220px,1fr))",
+        gap: "20px"
+      }}
+    >
+      <div>
+        <h3>🛣 Roads</h3>
+        <h2>₹{budgetSimulation.roads} Cr</h2>
+      </div>
+
+      <div>
+        <h3>💧 Water</h3>
+        <h2>₹{budgetSimulation.water} Cr</h2>
+      </div>
+
+      <div>
+        <h3>🏥 Health</h3>
+        <h2>₹{budgetSimulation.health} Cr</h2>
+      </div>
+
+      <div>
+        <h3>🗑 Sanitation</h3>
+        <h2>₹{budgetSimulation.garbage} Cr</h2>
+      </div>
+
+      <div>
+        <h3>😊 Expected Citizen Satisfaction</h3>
+        <h2>{budgetSimulation.satisfaction}%</h2>
+      </div>
+
+      <div>
+        <h3>📉 Expected Complaint Reduction</h3>
+        <h2>{budgetSimulation.reduction}%</h2>
+      </div>
+    </div>
+  )}
+</div>
+<div
+  style={{
+    background: "#1a1f38",
+    borderRadius: "15px",
+    padding: "25px",
+    marginBottom: "30px",
+    border: "2px solid #8b5cf6"
+  }}
+>
+  <h2
+    style={{
+      textAlign: "center",
+      color: "#8b5cf6"
+    }}
+  >
+    🏅 Governance Ranking Engine
+  </h2>
+
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns:
+        "repeat(auto-fit,minmax(250px,1fr))",
+      gap: "20px",
+      marginTop: "25px"
+    }}
+  >
+    <div>
+      <h3>🏆 National Rank</h3>
+      <h1>{governanceRank.nationalRank}</h1>
+    </div>
+
+    <div>
+      <h3>📊 Category</h3>
+      <h1>{governanceRank.category}</h1>
+    </div>
+
+    <div>
+      <h3>😊 Citizen Trust</h3>
+      <h1>{governanceRank.trust}</h1>
+    </div>
+  </div>
+
+  <div
+    style={{
+      marginTop: "20px",
+      background: "#0f172a",
+      padding: "20px",
+      borderRadius: "10px"
+    }}
+  >
+    <h3 style={{ color: "#38bdf8" }}>
+      🤖 AI Ranking Insight
+    </h3>
+
+    <p style={{ color: "#cbd5e1" }}>
+      JanMitra continuously benchmarks governance performance and predicts constituency standing relative to national governance standards.
+    </p>
+  </div>
 </div>
   <h2
     style={{
@@ -1163,7 +2337,10 @@ return (
   >
     📈 Civic Trend Analysis
   </h2>
-
+<h3 style={{ color: "#10b981" }}>
+  ⚡ Constituency Focus Area:
+  {trendData.topIssue} infrastructure requires immediate intervention.
+</h3>
   <div
     style={{
       display: "flex",
@@ -1326,7 +2503,13 @@ return (
     🗺️ Civic Complaint Map
   </h2>
 
-  <ComplaintMap complaints={complaints} />
+ <ComplaintMap
+  complaints={
+    complaints.filter(
+      c => c.status !== "Resolved"
+    )
+  }
+/>
 </div>
       {/* AI Summary */}
       <div
