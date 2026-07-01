@@ -1,3 +1,4 @@
+import { franc } from "franc";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { saveComplaint } from "./services/firestoreService";
@@ -5,6 +6,8 @@ import { checkDuplicateComplaint } from "./services/duplicateComplaintService";
 import { getDepartmentSuggestion } from "./services/departmentAI";
 import { analyzeComplaintPriority }
 from "./services/complaintAI";
+import { analyzeComplaintImage }
+from "./services/imageAnalysisAI";
 import {
   User,
   ClipboardList,
@@ -39,10 +42,11 @@ function ComplaintForm() {
   const [loading, setLoading] = useState(false);
 
   const [image, setImage] = useState(null);
+  const [imageAnalysis, setImageAnalysis] =
+  useState("");
   const [departmentInfo, setDepartmentInfo] = useState("");
 const [priority, setPriority] = useState("");
 const [analyzing, setAnalyzing] = useState(false);
-
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -87,6 +91,23 @@ const handleImage = (e) => {
 
   }
 
+};
+const handleImageAI = async (file) => {
+
+  const reader = new FileReader();
+
+  reader.onloadend = async () => {
+
+    const base64 = reader.result
+      .split(",")[1];
+
+    const result =
+      await analyzeComplaintImage(base64);
+
+    setImageAnalysis(result);
+  };
+
+  reader.readAsDataURL(file);
 };
 const analyzeComplaint = async () => {
 
@@ -144,7 +165,55 @@ if (result.includes("Garbage")) {
     setAnalyzing(false);
   }
 };
+const speakText = (text) => {
+  if (!text) return;
 
+  speechSynthesis.cancel();
+
+  const speech = new SpeechSynthesisUtterance(text);
+
+  // Detect language from complaint text
+  const detectedLanguage = franc(
+    `${title} ${description}`,
+    { minLength: 3 }
+  );
+
+  // Map detected language code to browser locale
+  const languageMap = {
+    hin: "hi-IN", // Hindi
+    ben: "bn-IN", // Bengali
+    ori: "or-IN", // Odia
+    tam: "ta-IN", // Tamil
+    tel: "te-IN", // Telugu
+    kan: "kn-IN", // Kannada
+    mal: "ml-IN", // Malayalam
+    mar: "mr-IN", // Marathi
+    guj: "gu-IN", // Gujarati
+    pan: "pa-IN", // Punjabi
+    asm: "as-IN", // Assamese
+    urd: "ur-IN", // Urdu
+    nep: "ne-NP", // Nepali
+    san: "hi-IN"  // Sanskrit fallback
+  };
+
+  speech.lang = languageMap[detectedLanguage] || "en-IN";
+
+  // Try to use an Indian voice if available
+  const voices = speechSynthesis.getVoices();
+
+  const matchingVoice = voices.find(
+    voice => voice.lang === speech.lang
+  );
+
+  if (matchingVoice) {
+    speech.voice = matchingVoice;
+  }
+
+  speech.rate = 1;
+  speech.pitch = 1;
+
+  speechSynthesis.speak(speech);
+};
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log("Submit button clicked");
@@ -328,6 +397,17 @@ alert(err.message);
     <h3 className="text-cyan-400 font-bold mb-3">
       AI Analysis
     </h3>
+    <button
+  type="button"
+  onClick={() =>
+    speakText(
+      departmentInfo + priority
+    )
+  }
+  className="mb-4 rounded-xl bg-cyan-600 px-4 py-2 text-white hover:bg-cyan-500"
+>
+  🔊 Read Analysis
+</button>
 
    <div className="whitespace-pre-wrap leading-8 font-medium">
   {departmentInfo}
@@ -525,11 +605,17 @@ alert(err.message);
       </p>
 
       <input
-        type="file"
-        accept="image/*"
-        hidden
-        onChange={handleImage}
-      />
+  type="file"
+  accept="image/*"
+  hidden
+  onChange={(e) => {
+    handleImage(e);
+
+    if (e.target.files[0]) {
+      handleImageAI(e.target.files[0]);
+    }
+  }}
+/>
 
     </label>
 
@@ -556,7 +642,19 @@ alert(err.message);
     </div>
 
   )}
+{imageAnalysis && (
+  <div className="mt-5 bg-slate-900 border border-cyan-500 rounded-2xl p-5 text-white">
 
+    <h3 className="text-cyan-400 font-bold mb-3">
+      👁 AI Image Assessment
+    </h3>
+
+    <div className="whitespace-pre-wrap leading-8">
+      {imageAnalysis}
+    </div>
+
+  </div>
+)}
 </div>
 
           {/* Submit */}

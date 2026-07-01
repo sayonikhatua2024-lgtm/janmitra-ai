@@ -4,6 +4,9 @@ export const analyzeComplaintPriority = async (complaint) => {
 
   const prompt = `
 You are an AI system used by the Government of India.
+Analyze the citizen complaint.
+
+Respond strictly in the same language used by the citizen in the complaint.
 
 Classify the complaint into exactly ONE category:
 
