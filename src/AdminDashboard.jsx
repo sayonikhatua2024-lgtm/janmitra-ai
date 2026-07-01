@@ -15,6 +15,8 @@ import {
   XAxis,
   YAxis,
   Tooltip,
+  Legend,
+  Label,
 } from "recharts";
 
 function AdminDashboard() {
@@ -51,7 +53,7 @@ function AdminDashboard() {
   ).length;
 
   const critical = complaints.filter(
-    (c) => c.priority === "Critical"
+    (c) => c.status?.toLowerCase() === "critical"
   ).length;
 
   // Dynamic Categories
@@ -63,10 +65,32 @@ function AdminDashboard() {
       (categoryCounts[category] || 0) + 1;
   });
 
-  const categoryData = Object.keys(categoryCounts).map((key) => ({
-    name: key,
-    value: categoryCounts[key],
-  }));
+  const categoryData = [
+    {
+      name: "Road",
+      value: complaints.filter(
+        c => c.category?.toLowerCase().includes("road")
+      ).length,
+    },
+    {
+      name: "Water",
+      value: complaints.filter(
+        c => c.category?.toLowerCase().includes("water")
+      ).length,
+    },
+    {
+      name: "Electricity",
+      value: complaints.filter(
+        c => c.category?.toLowerCase().includes("electric")
+      ).length,
+    },
+    {
+      name: "Garbage",
+      value: complaints.filter(
+        c => c.category?.toLowerCase().includes("garbage")
+      ).length,
+    },
+  ];
 
   const statusData = [
     {
@@ -166,7 +190,10 @@ ${pending > resolved
 
             {/* AI REPORT */}
 
-            <div className="grid lg:grid-cols-2 gap-6 mt-8">
+            <div
+              id="report"
+              className="grid lg:grid-cols-2 gap-6 mt-8"
+            >
 
               <div className="rounded-3xl bg-slate-900 border border-slate-800 p-6">
 
@@ -266,7 +293,10 @@ ${pending > resolved
 
             {/* CHARTS */}
 
-            <div className="grid lg:grid-cols-2 gap-6 mt-8">
+            <div
+              id="analytics"
+              className="grid lg:grid-cols-2 gap-6 mt-8"
+            >
 
               <div className="rounded-3xl bg-slate-900 border border-slate-800 p-6">
 
@@ -279,34 +309,38 @@ ${pending > resolved
                   height={320}
                 >
 
-                  <PieChart>
+                  <ResponsiveContainer width="100%" height={320}>
+                    <PieChart>
 
-                    <Pie
-                      data={categoryData}
-                      dataKey="value"
-                      nameKey="name"
-                      outerRadius={110}
-                      label
-                    >
+                      <Pie
+                        data={categoryData}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={100}
+                        label={({ name, percent }) =>
+                          `${name} (${(percent * 100).toFixed(0)}%)`
+                        }
+                      >
+                        {categoryData.map((entry, index) => (
+                          <Cell
+                            key={index}
+                            fill={COLORS[index % COLORS.length]}
+                          />
+                        ))}
+                      </Pie>
 
-                      {categoryData.map((entry, index) => (
+                      <Tooltip />
 
-                        <Cell
-                          key={index}
-                          fill={
-                            COLORS[
-                            index % COLORS.length
-                            ]
-                          }
-                        />
+                      <Legend
+                        verticalAlign="bottom"
+                        height={36}
+                        wrapperStyle={{ color: "#ffffff" }}
+                      />
 
-                      ))}
-
-                    </Pie>
-
-                    <Tooltip />
-
-                  </PieChart>
+                    </PieChart>
+                  </ResponsiveContainer>
 
                 </ResponsiveContainer>
 
@@ -346,7 +380,10 @@ ${pending > resolved
             </div>
             {/* Complaint Hotspots */}
 
-            <div className="rounded-3xl bg-slate-900 border border-slate-800 p-6 mt-8">
+            <div
+              id="hotspots"
+              className="rounded-3xl bg-slate-900 border border-slate-800 p-6 mt-8"
+            >
 
               <h2 className="text-2xl font-bold text-white mb-6">
                 📍 Complaint Hotspots
@@ -389,7 +426,10 @@ ${pending > resolved
 
             {/* Complaint Section */}
 
-            <div className="mt-10">
+            <div
+              id="complaints"
+              className="mt-10"
+            >
 
               <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
 
@@ -455,8 +495,8 @@ ${pending > resolved
 
                         <span
                           className={`px-4 py-2 rounded-full text-white font-semibold ${item.status === "Resolved"
-                              ? "bg-green-600"
-                              : "bg-orange-500"
+                            ? "bg-green-600"
+                            : "bg-orange-500"
                             }`}
                         >
                           {item.status}
